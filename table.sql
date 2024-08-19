@@ -1,7 +1,6 @@
-CREATE TABLE users(
-    id int AUTO_INCREMENT,
-    name varchar(255),
-    email varchar(255),
-    password varchar(255),
-    primary key (id)
+CREATE TABLE todos (
+    id int AUTO_INCREMENT primary key,
+    title varchar(255),
+    description text,
+    status ENUM('peding', 'completed') DEFAULT 'peding'
 );
