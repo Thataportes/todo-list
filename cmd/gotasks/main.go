@@ -7,6 +7,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+// Estrutura para Todo
 type Todo struct {
 	Id          int
 	Title       string
@@ -19,7 +20,7 @@ func main() {
 	// conectar com o Mysql
 	db, err := sql.Open("mysql", "root:1053@/mysql")
 	if err != nil {
-		log.Fatal(err.Error(), "\n ERRO AO CONECTAR BANCO DE DADOS")
+		log.Fatal(err.Error())
 	}
 
 	// verificar a conexao
