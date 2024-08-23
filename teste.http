@@ -1,2 +1,32 @@
-GET http://localhost:8080/
+GET http://localhost:8080/tasks
+Accept: application/json
 
+
+### Add a new task
+POST http://localhost:8080/tasks
+Content-Type: application/json
+
+{
+    "title": "Wake up",
+    "description":, "wake up at 8 am"
+
+}
+
+### edit a task by id
+PUT http://localhost:8080/tasks/{id} 
+Content-Type: application/json
+
+{
+    "title": "Go to sleep",
+    "description":, "go to sleep at 8 pm"
+
+}
+
+### status by id
+PATCH http://localhost:8080/tasks/{id}/status
+Content-Type: application/json
+
+{}
+
+### Delete task by id
+DELETE http://localhost:8080/tasks/{id}
