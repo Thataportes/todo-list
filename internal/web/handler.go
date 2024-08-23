@@ -11,6 +11,10 @@ type TaskHandlers struct {
 	service *service.TaskService
 }
 
+func NewTaskHandlers(service *service.TaskService) *TaskHandlers {
+	return &TaskHandlers{service: service}
+}
+
 func (h *TaskHandlers) GetTasks(w http.ResponseWriter, r *http.Request) {
 	tasks, err := h.service.GetTasks()
 	if err != nil {
@@ -22,6 +26,7 @@ func (h *TaskHandlers) GetTasks(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(tasks)
 }
 
+// lida com a requisição POST
 func (h *TaskHandlers) CreateTask(w http.ResponseWriter, r *http.Request) {
 	var task service.Task
 	err := json.NewDecoder(r.Body).Decode(&task)
@@ -87,6 +92,7 @@ func (h *TaskHandlers) UptadeTask(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(task)
 }
 
+// lida com a requisição PATCH
 func (h *TaskHandlers) StatusTask(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
@@ -102,6 +108,7 @@ func (h *TaskHandlers) StatusTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// lida com a requisição DELETE
 func (h *TaskHandlers) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
