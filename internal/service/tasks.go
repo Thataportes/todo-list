@@ -84,7 +84,7 @@ func (s *TaskService) UptadeTask(task *Task) error {
 
 // Mostra se uma tarefa foi concluida ou nao no banco de dados
 func (s *TaskService) StatusTask(id int) error {
-	query := "UPDATE tasks SET title=?, description=?, status=? WHERE id=? "
+	query := "UPDATE tasks SET status=? WHERE id=? "
 	_, err := s.db.Exec(query, id)
 	return err
 }
