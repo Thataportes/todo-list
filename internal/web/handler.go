@@ -5,16 +5,20 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 )
 
+// Lida com as requisições HTTP relacionadas a tarefas.
 type TaskHandlers struct {
 	service *service.TaskService
 }
 
+// Cria uma nova instância de TaskHandlers.
 func NewTaskHandlers(service *service.TaskService) *TaskHandlers {
 	return &TaskHandlers{service: service}
 }
 
+// Lida com a requisição GET /tasks.
 func (h *TaskHandlers) GetTasks(w http.ResponseWriter, r *http.Request) {
 	tasks, err := h.service.GetTasks()
 	if err != nil {
@@ -26,7 +30,7 @@ func (h *TaskHandlers) GetTasks(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(tasks)
 }
 
-// lida com a requisição POST
+// lida com a requisição POST/tasks.
 func (h *TaskHandlers) CreateTask(w http.ResponseWriter, r *http.Request) {
 	var task service.Task
 	err := json.NewDecoder(r.Body).Decode(&task)
@@ -44,7 +48,7 @@ func (h *TaskHandlers) CreateTask(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(task)
 }
 
-// lida com a requisição GET
+// Lida com a requisição GET/tasks/{id}
 func (h *TaskHandlers) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 	idSTR := r.PathValue("id")
 	id, err := strconv.Atoi(idSTR)
@@ -67,7 +71,7 @@ func (h *TaskHandlers) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(task)
 }
 
-// lida com a requisição PUT
+// Lida com a requisição PUT/tasks/{id}.
 func (h *TaskHandlers) UptadeTask(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
@@ -92,7 +96,7 @@ func (h *TaskHandlers) UptadeTask(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(task)
 }
 
-// lida com a requisição PATCH
+// Lida com a requisição PATCH/tasks/{id}.
 func (h *TaskHandlers) StatusTask(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
@@ -108,7 +112,7 @@ func (h *TaskHandlers) StatusTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// lida com a requisição DELETE
+// Lida com a requisição DELETE/tasks/{id}.
 func (h *TaskHandlers) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
@@ -122,4 +126,27 @@ func (h *TaskHandlers) DeleteTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *TaskHandlers) SimulateReading(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		TaskIDs []int `json:"task_ids"`
+	}
+
+	// Decodifica o JSON recebido no corpo da requisição
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if len(request.TaskIDs) == 0 {
+		http.Error(w, "No task IDs provided", http.StatusBadRequest)
+		return
+	}
+
+	// Chama o serviço para simular a leitura de múltiplas tarefas
+	response := h.service.SimulateMultipleReadings(request.TaskIDs, 2*time.Second)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }

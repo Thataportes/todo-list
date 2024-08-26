@@ -1,8 +1,9 @@
+### Listar todas as tarefas
 GET http://localhost:8080/tasks
 Accept: application/json
 
 
-### Add a new task
+### Adicionar uma nova tarefa
 POST http://localhost:8080/tasks
 Content-Type: application/json
 
@@ -12,8 +13,12 @@ Content-Type: application/json
 
 }
 
-### edit a task by id
-PUT http://localhost:8080/tasks/{id} 
+### Listar uma tarefa especifica
+GET http://localhost:8080/tasks/2
+Accept: application/json
+
+### Editar uma tarefa 
+PUT http://localhost:8080/tasks/1 
 Content-Type: application/json
 
 {
@@ -22,11 +27,19 @@ Content-Type: application/json
 
 }
 
-### status by id
-PATCH http://localhost:8080/tasks/{id}/status
+### Status da tarefa
+PATCH http://localhost:8080/tasks/3/status
 Content-Type: application/json
 
 {}
 
-### Delete task by id
-DELETE http://localhost:8080/tasks/{id}
+### Deletar uma tarefa
+DELETE http://localhost:8080/tasks/1
+
+### Simular a leitura de multiplas tarefas
+POST http://localhost:8080/simulate-reading
+Content-Type: application/json
+
+{
+  "task_ids": [1, 2, 3]
+}

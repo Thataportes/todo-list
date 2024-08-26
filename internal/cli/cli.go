@@ -8,14 +8,17 @@ import (
 	"time"
 )
 
+// lida com a interface de linha de comando para buscar e simular leitura de tarefas.
 type taskCLI struct {
 	service *service.TaskService
 }
 
+// Cria uma nova instância de taskCLI.
 func NewTaskCLI(service *service.TaskService) *taskCLI {
 	return &taskCLI{service: service}
 }
 
+// Executa o CLI.
 func (cli *taskCLI) Run() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: tasks <command> [arguments]")
@@ -43,6 +46,7 @@ func (cli *taskCLI) Run() {
 
 }
 
+// Busca e exibe tarefas com base no nome fornecido.
 func (cli *taskCLI) searchTasks(name string) {
 	tasks, err := cli.service.SearchTasksByName(name)
 	if err != nil {
@@ -63,6 +67,7 @@ func (cli *taskCLI) searchTasks(name string) {
 	}
 }
 
+// Simula a leitura de tarefas com base nos IDs fornecidos.
 func (cli *taskCLI) simulateReading(taskIDsStr []string) {
 	var taskIDs []int
 	for _, idStr := range taskIDsStr {
@@ -73,8 +78,10 @@ func (cli *taskCLI) simulateReading(taskIDsStr []string) {
 		}
 		taskIDs = append(taskIDs, id)
 	}
+	// Chama o serviço para simular a leitura de múltiplas tarefas.
 	responses := cli.service.SimulateMultipleReadings(taskIDs, 2*time.Second)
 
+	// Exibe os resultados
 	for _, response := range responses {
 		fmt.Println(response)
 	}
