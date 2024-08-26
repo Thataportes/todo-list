@@ -1,6 +1,6 @@
-CREATE TABLE task (
+CREATE TABLE tasks (
     id int AUTO_INCREMENT primary key,
     title varchar(255),
     description text,
-    status ENUM('peding', 'completed') DEFAULT 'peding'
+    status ENUM('pending', 'completed') DEFAULT 'pending'
 );

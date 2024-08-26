@@ -4,8 +4,8 @@ WORKDIR /TODO-LIST
 
 COPY . .
 
-RUN go build -o cmd/gotasks/main ./cmd/gotasks
+RUN go build -o task ./cmd/gotasks/main.go
 
 EXPOSE 8080
 
-CMD ["./cmd/gotasks/main"]
+CMD ["./task"]

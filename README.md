@@ -11,6 +11,13 @@ Desenvolver uma aplicação CLI para gerenciar uma lista de tarefas, permitindo 
 - **Go** (versão 1.20 ou superior)
 - **Docker** e **Docker Compose**
 
+### Clonar o Repositório
+
+```bash
+git clone https://github.com/Thataportes/todo-list.git
+cd todo-list
+
+
 ## Estrutura do Projeto
 
 - **main.go**: Arquivo principal que contém a lógica da aplicação.
@@ -23,10 +30,3 @@ Desenvolver uma aplicação CLI para gerenciar uma lista de tarefas, permitindo 
 - **README.md**: Documentação do projeto.
 
 ## Instalação e Execução
-
-
-### Clonar o Repositório
-
-```bash
-git clone https://github.com/Thataportes/todo-list.git
-cd todo-list

@@ -43,7 +43,7 @@ func (s *TaskService) CreateTask(task *Task) error {
 
 // Retorna todas as tarefas do banco de dados.
 func (s *TaskService) GetTasks() ([]Task, error) {
-	query := "SELECT id , title, description, status FROM tasks"
+	query := "SELECT * FROM tasks"
 	rows, err := s.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (s *TaskService) GetTasks() ([]Task, error) {
 
 // Retorna uma tarefa pelo seu ID.
 func (s *TaskService) GetTaskByID(id int) (*Task, error) {
-	query := "SELECT id, title, description, completed FROM tasks WHERE id = ?"
+	query := "SELECT id, title, description, status FROM tasks WHERE id = ?"
 	row := s.db.QueryRow(query, id)
 
 	var task Task
@@ -84,7 +84,7 @@ func (s *TaskService) UptadeTask(task *Task) error {
 
 // Mostra se uma tarefa foi concluida ou nao no banco de dados
 func (s *TaskService) StatusTask(id int) error {
-	query := "UPDATE tasks SET status = TRUE WHERE id=?"
+	query := "UPDATE tasks SET title=?, description=?, status=? WHERE id=? "
 	_, err := s.db.Exec(query, id)
 	return err
 }
