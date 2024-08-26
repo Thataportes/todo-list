@@ -29,17 +29,21 @@ func main() {
 	defer db.Close()
 	log.Println("Conectou com o banco de dados")
 
+	// Inicializando o serviço
 	taskService := service.NewTaskService(db)
+	// Inicializando os handlers
 	taskHandlers := web.NewTaskHandlers(taskService)
-
+	// Verifica se o CLI foi chamado com o comando "search" ou "simulate"
 	if len(os.Args) > 1 && (os.Args[1] == "search" || os.Args[1] == "simulate") {
 		taskCLI := cli.NewTaskCLI(taskService)
 		taskCLI.Run()
 		return
 	}
 
-	// cadastrar URL
+	// Criando o roteador com o novo servidor
 	router := http.NewServeMux()
+
+	// Configurando as rotas RESTful
 	router.HandleFunc("GET /tasks", taskHandlers.GetTasks)
 	router.HandleFunc("POST /tasks", taskHandlers.CreateTask)
 	router.HandleFunc("GET /tasks/{id}", taskHandlers.GetTaskByID)
@@ -47,6 +51,7 @@ func main() {
 	router.HandleFunc("PATCH /tasks/{id}", taskHandlers.StatusTask)
 	router.HandleFunc("DELETE /tasks/{id}", taskHandlers.DeleteTask)
 
+	// Iniciando o servidor
 	fmt.Println("Server is running on port 8080")
 	http.ListenAndServe(":8080", router)
 }
