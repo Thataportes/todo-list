@@ -13,7 +13,7 @@ type Task struct {
 	ID          int
 	Title       string
 	Description string
-	status      bool
+	Status      bool
 }
 
 // Lida com a lógica de negócios e persistência de tarefas.
@@ -52,7 +52,7 @@ func (s *TaskService) GetTasks() ([]Task, error) {
 	var tasks []Task
 	for rows.Next() {
 		var task Task
-		err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.status)
+		err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.Status)
 		if err != nil {
 			return nil, err
 		}
@@ -68,7 +68,7 @@ func (s *TaskService) GetTaskByID(id int) (*Task, error) {
 	row := s.db.QueryRow(query, id)
 
 	var task Task
-	err := row.Scan(&task.ID, &task.Title, &task.Description, &task.status)
+	err := row.Scan(&task.ID, &task.Title, &task.Description, &task.Status)
 	if err != nil {
 		return nil, err
 	}
@@ -76,16 +76,16 @@ func (s *TaskService) GetTaskByID(id int) (*Task, error) {
 }
 
 // Atualiza as informações de uma tarefa no banco de dados.
-func (s *TaskService) UptadeTask(task *Task) error {
-	query := "UPDATE tasks SET title=?, description=?, WHERE id=? "
+func (s *TaskService) UpdateTask(task *Task) error {
+	query := "UPDATE tasks SET title=?, description=?, status=? WHERE id=? "
 	_, err := s.db.Exec(query, task.Title, task.ID)
 	return err
 }
 
 // Mostra se uma tarefa foi concluida ou nao no banco de dados
-func (s *TaskService) StatusTask(id int) error {
+func (s *TaskService) StatusTask(id int, status bool) error {
 	query := "UPDATE tasks SET status=? WHERE id=? "
-	_, err := s.db.Exec(query, id)
+	_, err := s.db.Exec(query, status, id)
 	return err
 }
 
@@ -98,7 +98,7 @@ func (s *TaskService) DeleteTask(id int) error {
 
 // Busca tarefas pelo nome (título) no banco de dados.
 func (s *TaskService) SearchTasksByName(name string) ([]Task, error) {
-	query := "SELECT id, title, description, status FROM tasks WHERE title like ?"
+	query := "SELECT id, title, description, status FROM tasks WHERE title LIKE ?"
 	rows, err := s.db.Query(query, "%"+name+"%")
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func (s *TaskService) SearchTasksByName(name string) ([]Task, error) {
 	var tasks []Task
 	for rows.Next() {
 		var task Task
-		err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.status)
+		err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.Status)
 		if err != nil {
 			return nil, err
 		}
@@ -130,17 +130,17 @@ func (s *TaskService) SimulateReading(taskId int, duration time.Duration, result
 }
 
 // Simula a leitura de múltiplas tarefas simultaneamente.
-func (s *TaskService) SimulateMultipleReadings(taskIDd []int, duration time.Duration) []string {
-	results := make(chan string, len(taskIDd))
+func (s *TaskService) SimulateMultipleReadings(taskIDs []int, duration time.Duration) []string {
+	results := make(chan string, len(taskIDs))
 
-	for _, id := range taskIDd {
+	for _, id := range taskIDs {
 		go func(taskId int) {
 			s.SimulateReading(taskId, duration, results)
 		}(id)
 	}
 
 	var responses []string
-	for range taskIDd {
+	for range taskIDs {
 		responses = append(responses, <-results) // pause
 	}
 	close(results)

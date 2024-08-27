@@ -33,7 +33,6 @@ cd todo-list
 - **main.go**: Arquivo principal que contém a lógica da aplicação.
 - **cli.go**: Configuração dos comandos CLI.
 - **tasks.go**: Definições das estruturas e interações com o banco de dados.
-- **handler.go**: Manipuladores para as operações CRUD.
 - **Dockerfile**: Arquivo para construir a imagem Docker da aplicação.
 - **docker-compose.yml**: Arquivo para orquestrar os contêineres Docker.
 - **.env**: Arquivo de configuração com variáveis de ambiente.
@@ -47,14 +46,41 @@ Configuração do Ambiente
 - ** docker-compose up **
 
 ** Compile a aplicação.
-- ** go build -o task ./cmd/gotasks.main.go **
+- ** go build -o tasks ./cmd/gotasks.main.go **
 
 ** Entre no banco de dados Mysql.
 - ** Docker exec -it todolist bash 
 - ** mysql -u root -p
 - ** root **
 
-### Comandos da Aplicação 
+
+### Comandos da aplicação com o CLI
+** Compilar o codigo fonte
+- ** go build -o tasks ./cmd/gotasks/main.go **
+
+** Listar tarefas
+- ** ./tasks list **
+
+** Criar uma tarefa
+- ** ./tasks create "New Task" "New description" **
+
+** Editar tarefas
+- ** ./tasks update 1 "Update task" "Update description" **
+
+** Atualizar o status das tarefas
+- ** ./tasks status 1 true **
+
+** Excluir tarefas
+- ** ./tasks DELETE 1 **
+
+** Buscar tarefas
+- ** ./tasks search "New Task" **
+
+** Simular leitura das tarefas
+- ** ./tasks simulate 1 2 3  **
+
+
+### Comandos da aplicação dentro do Mysql
 ** Entrar no banco de dados "todolist" e nas tabelas
 - ** USE todolist **
 - ** SHOW TABLES; **

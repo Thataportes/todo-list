@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// lida com a interface de linha de comando para buscar e simular leitura de tarefas.
+// Representa o CLI para tarefas.
 type taskCLI struct {
 	service *service.TaskService
 }
@@ -27,28 +27,141 @@ func (cli *taskCLI) Run() {
 	command := os.Args[1]
 
 	switch command {
-	case "search":
-		if len(os.Args) < 3 {
-			fmt.Println("Usage: tasks search <task title>")
+	case "list":
+		cli.listTask()
+
+	case "create":
+		if len(os.Args) < 4 {
+			fmt.Println("Usage: tasks create <title> <description>")
 			return
 		}
-		taskName := os.Args[2]
-		cli.searchTasks(taskName)
+		title := os.Args[2]
+		description := os.Args[3]
+		cli.createTask(title, description)
+
+	case "update":
+		if len(os.Args) < 5 {
+			fmt.Println("Usage: tasks update <id> <title> <description>")
+			return
+		}
+		id, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			fmt.Println("Invalid task ID:", os.Args[2])
+			return
+		}
+		title := os.Args[3]
+		description := os.Args[4]
+		cli.updateTask(id, title, description)
+
+	case "status":
+		if len(os.Args) < 4 {
+			fmt.Println("Usage: tasks status <id> <status>")
+			return
+		}
+		id, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			fmt.Println("Invalid task ID:", os.Args[2])
+			return
+		}
+		status, err := strconv.ParseBool(os.Args[3])
+		if err != nil {
+			fmt.Println("Invalid status value:", os.Args[3])
+			return
+		}
+		cli.statusTask(id, status)
+
+	case "delete":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage: tasks delete <id>")
+			return
+		}
+		id, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			fmt.Println("Invalid task ID:", os.Args[2])
+			return
+		}
+		cli.deleteTask(id)
+
+	case "search":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage: tasks search <title>")
+			return
+		}
+		title := os.Args[2]
+		cli.searchTasks(title)
 
 	case "simulate":
 		if len(os.Args) < 3 {
-			fmt.Println("Usage: tasks simulate <task_id> <task_id> <task_id> ...")
+			fmt.Println("Usage: tasks simulate <task_id> <task_id> ...")
 			return
 		}
-		TaskIDs := os.Args[2:]
-		cli.simulateReading(TaskIDs)
-	}
+		taskIDsStr := os.Args[2:]
+		cli.simulateReading(taskIDsStr)
 
+	default:
+		fmt.Println("Unknown command:", command)
+	}
+}
+
+func (cli *taskCLI) listTask() {
+	tasks, err := cli.service.GetTasks()
+	if err != nil {
+		fmt.Println("Error fetching tasks:", err)
+		return
+	}
+	fmt.Println("Task fetched successfuly")
+	fmt.Println("Tasks:")
+	for _, task := range tasks {
+		fmt.Printf("ID: %d, Title: %s, Description: %s, Status: %t\n",
+			task.ID, task.Title, task.Description, task.Status)
+	}
+}
+
+func (cli *taskCLI) createTask(title, description string) {
+	task := &service.Task{
+		Title:       title,
+		Description: description,
+		Status:      false,
+	}
+	if err := cli.service.CreateTask(task); err != nil {
+		fmt.Println("Error creating task:", err)
+		return
+	}
+	fmt.Printf("Task created with ID: %d\n", task.ID)
+}
+
+func (cli *taskCLI) updateTask(id int, title, description string) {
+	task := &service.Task{
+		ID:          id,
+		Title:       title,
+		Description: description,
+	}
+	if err := cli.service.UpdateTask(task); err != nil {
+		fmt.Println("Error updating task:", err)
+		return
+	}
+	fmt.Println("Task updated successfully.")
+}
+
+func (cli *taskCLI) statusTask(id int, status bool) {
+	if err := cli.service.StatusTask(id, status); err != nil {
+		fmt.Println("Error updating task status:", err)
+		return
+	}
+	fmt.Println("Task status updated successfully.")
+}
+
+func (cli *taskCLI) deleteTask(id int) {
+	if err := cli.service.DeleteTask(id); err != nil {
+		fmt.Println("Error deleting task:", err)
+		return
+	}
+	fmt.Println("Task deleted successfully.")
 }
 
 // Busca e exibe tarefas com base no nome fornecido.
-func (cli *taskCLI) searchTasks(name string) {
-	tasks, err := cli.service.SearchTasksByName(name)
+func (cli *taskCLI) searchTasks(title string) {
+	tasks, err := cli.service.SearchTasksByName(title)
 	if err != nil {
 		fmt.Println("Error searching tasks:", err)
 		return
@@ -61,9 +174,8 @@ func (cli *taskCLI) searchTasks(name string) {
 
 	fmt.Printf("%d tasks found \n", len(tasks))
 	for _, task := range tasks {
-		fmt.Printf("ID: %d, Title: %s, Description: %s",
-			task.ID, task.Title, task.Description,
-		)
+		fmt.Printf("ID: %d, Title: %s, Description: %s, Status: %t\n",
+			task.ID, task.Title, task.Description, task.Status)
 	}
 }
 
