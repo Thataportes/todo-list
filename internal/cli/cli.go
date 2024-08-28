@@ -109,7 +109,7 @@ func (cli *taskCLI) listTask() {
 		fmt.Println("Error fetching tasks:", err)
 		return
 	}
-	fmt.Println("Task fetched successfuly")
+
 	fmt.Println("Tasks:")
 	for _, task := range tasks {
 		fmt.Printf("ID: %d, Title: %s, Description: %s, Status: %t\n",
