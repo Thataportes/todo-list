@@ -3,6 +3,7 @@ package taskbus
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -18,10 +19,10 @@ func NewBusiness(db *sql.DB) *Business {
 }
 
 // Create adds a new task to the database and returns the created task.
-// TODO: precisamos setar o campo createdAt.
 func (s *Business) Create(ctx context.Context, nt NewTask) (Task, error) {
-	query := "INSERT INTO tasks (title, description, createdAt) VALUES (?, ?)"
-	result, err := s.db.ExecContext(ctx, query, nt.Title, nt.Description, nt.CreatedAt)
+	createdAt := time.Now()
+	query := "INSERT INTO tasks (title, description, created_at) VALUES (?, ?, ?)"
+	result, err := s.db.ExecContext(ctx, query, nt.Title, nt.Description, createdAt)
 	if err != nil {
 		return Task{}, err
 	}
@@ -35,14 +36,16 @@ func (s *Business) Create(ctx context.Context, nt NewTask) (Task, error) {
 		ID:          int(lastInsertID),
 		Title:       nt.Title,
 		Description: nt.Description,
+		CreatedAt:   createdAt,
 	}
 
 	return t, nil
 }
 
-func (s *Business) Query() ([]Task, error) {
-	query := "SELECT id, title, description FROM tasks"
-	rows, err := s.db.Query(query)
+// Query retrieves all tasks from the database.
+func (s *Business) Query(ctx context.Context) ([]Task, error) {
+	query := "SELECT id, title, description, created_at, finished_at FROM tasks"
+	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -52,37 +55,51 @@ func (s *Business) Query() ([]Task, error) {
 	var tasks []Task
 	for rows.Next() {
 		var task Task
-		err := rows.Scan(&task.ID, &task.Title, &task.Description)
+		var finishedAt sql.NullTime
+		err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.CreatedAt, &finishedAt)
 		if err != nil {
 			return nil, err
 		}
+		if finishedAt.Valid {
+			task.FinishedAt = &finishedAt.Time
+		}
+
 		tasks = append(tasks, task)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return tasks, nil
 
 }
 
-func (s *Business) QueryByID(id int) (Task, error) {
-	query := "SELECT id, title, description FROM tasks WHERE id =?"
-	row := s.db.QueryRow(query, id)
+// QueryByID retrieves a task by its ID.
+func (s *Business) QueryByID(ctx context.Context, id int) (Task, error) {
+	query := "SELECT id, title, description, created_at, finished_at FROM tasks WHERE id =?"
+	row := s.db.QueryRowContext(ctx, query, id)
 
 	var task Task
-	err := row.Scan(&task.ID, &task.Title, &task.Description)
+	var finishedAt sql.NullTime
+	err := row.Scan(&task.ID, &task.Title, &task.Description, &task.CreatedAt, &finishedAt)
 	if err != nil {
 		return Task{}, err
+	}
+	if finishedAt.Valid {
+		task.FinishedAt = &finishedAt.Time
 	}
 	return task, nil
 }
 
 // Update modifies task information in the database and returns the updated task.ções de uma tarefa no banco de dados e retorna a tarefa atualizada.
 func (s *Business) Update(ctx context.Context, ut UpdateTask) (Task, error) {
-	query := "UPDATE tasks SET title=?, description=? WHERE id= ? "
+	query := "UPDATE tasks SET title=?, description=? WHERE id=? "
 	_, err := s.db.ExecContext(ctx, query, ut.Title, ut.Description, ut.ID)
 	if err != nil {
 		return Task{}, err
 	}
 
-	updatedTask, err := s.QueryByID(ut.ID)
+	updatedTask, err := s.QueryByID(ctx, ut.ID)
 	if err != nil {
 		return Task{}, err
 	}
@@ -90,14 +107,17 @@ func (s *Business) Update(ctx context.Context, ut UpdateTask) (Task, error) {
 	return updatedTask, nil
 }
 
-func (s *Business) Delete(id int) error {
+// Delete removes a task from the database by its ID.
+func (s *Business) Delete(ctx context.Context, id int) error {
 	query := "DELETE FROM tasks WHERE id=?"
-	_, err := s.db.Exec(query, id)
+	_, err := s.db.ExecContext(ctx, query, id)
 	return err
 }
 
-func (s *Business) Finish(id int) error {
-	query := "UPDATE tasks SET status = completed' WHERE id = ?"
-	_, err := s.db.Exec(query, id)
+// Finish updates the finishedAt timestamp for a task.
+func (s *Business) Finish(ctx context.Context, id int) error {
+	finishedAt := time.Now()
+	query := "UPDATE tasks SET finished_at = ? WHERE id = ?"
+	_, err := s.db.ExecContext(ctx, query, finishedAt, id)
 	return err
 }
