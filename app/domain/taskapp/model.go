@@ -1,0 +1,64 @@
+package taskapp
+
+import (
+	"TODO-list/business/domain/taskbus"
+	"time"
+)
+
+// NewTask represents a new task to be created.
+type NewTask struct {
+	Title       string
+	Description string
+}
+
+// toBusNewTask converts a NewTask from the application layer to the business layer.
+func toBusNewTask(nt NewTask) taskbus.NewTask {
+	return taskbus.NewTask{
+		Title:       nt.Title,
+		Description: nt.Description,
+	}
+}
+
+// Task represents a task in the system.
+type Task struct {
+	ID          int
+	Title       string
+	Description string
+	CreatedAt   time.Time
+	FinishedAt  time.Time
+}
+
+// toAppTask converts a task from the business layer to the application layer.
+func toAppTask(taskBus taskbus.Task) Task {
+	return Task{
+		ID:          taskBus.ID,
+		Title:       taskBus.Title,
+		Description: taskBus.Description,
+		CreatedAt:   taskBus.CreatedAt,
+	}
+}
+
+// toAppTasks converts a slice of business layer tasks to application layer tasks.
+func toAppTasks(tasksBus []taskbus.Task) []Task {
+	var tasksApp []Task
+	for _, taskBus := range tasksBus {
+		tasksApp = append(tasksApp, toAppTask(taskBus))
+	}
+	return tasksApp
+}
+
+// UpdateTask represents a task with updates to be applied.
+type UpdateTask struct {
+	ID          int
+	Title       string
+	Description string
+}
+
+// toBusUpdateTask converts an UpdateTask from the application layer to the business layer.
+func toBusUpdateTask(ut UpdateTask) taskbus.UpdateTask {
+	return taskbus.UpdateTask{
+		ID:          ut.ID,
+		Title:       ut.Title,
+		Description: ut.Description,
+	}
+}
