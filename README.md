@@ -82,6 +82,9 @@ Configuração do Ambiente
 
 ### Comandos da aplicação dentro do Mysql
 ** Entrar no banco de dados "todolist" e nas tabelas
+- ** docker exec -it todolist bash **
+- ** bash-5.1# mysql -u root -p **
+- ** Enter password: ** 
 - ** USE todolist **
 - ** SHOW TABLES; **
 
