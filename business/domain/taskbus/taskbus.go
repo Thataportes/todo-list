@@ -86,19 +86,14 @@ func (s *Business) QueryByID(ctx context.Context, id int) (Task, error) {
 }
 
 // Update modifies task information in the database and returns the updated task.
-func (s *Business) Update(ctx context.Context, ut UpdateTask) (Task, error) {
+func (s *Business) Update(ctx context.Context, ut UpdateTask) error {
 	query := "UPDATE task SET title = ?, description = ? WHERE id = ?"
 	_, err := s.db.ExecContext(ctx, query, ut.Title, ut.Description, ut.ID)
 	if err != nil {
-		return Task{}, err
+		return err
 	}
 
-	updatedTask, err := s.QueryByID(ctx, ut.ID)
-	if err != nil {
-		return Task{}, err
-	}
-
-	return updatedTask, nil
+	return nil
 }
 
 // Delete removes a task from the database by its ID.
@@ -110,7 +105,13 @@ func (s *Business) Delete(ctx context.Context, id int) error {
 
 // Finish updates the finishedAt timestamp for a task.
 func (s *Business) Finish(ctx context.Context, id int) error {
-	finishedAt := sql.NullTime{Time: time.Now(), Valid: true}
+	now := time.Now()
+
+	finishedAt := sql.NullTime{
+		Time:  time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second(), 0, time.Local),
+		Valid: true,
+	}
+
 	query := "UPDATE task SET finished_at = ? WHERE id = ?"
 	_, err := s.db.ExecContext(ctx, query, finishedAt, id)
 	if err != nil {

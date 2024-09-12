@@ -117,9 +117,9 @@ func create(ctx context.Context, app *taskapp.App, title, description string) {
 
 // update modifies an existing task using the application layer.
 func update(ctx context.Context, app *taskapp.App, id int, title, description string) {
-	_, err := app.Update(ctx, taskapp.UpdateTask{ID: id, Title: title, Description: description})
+	err := app.Update(ctx, taskapp.UpdateTask{ID: id, Title: title, Description: description})
 	if err != nil {
-		fmt.Println("Error updated task:", err)
+		fmt.Println("Error updating task:", err)
 		return
 	}
 	fmt.Println("Task updated successfully.")
