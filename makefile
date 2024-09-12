@@ -1,4 +1,4 @@
-.PHONY: up down db-logs mysql task-dir task-test
+.PHONY: up down db-logs mysql task-dir task-test test
 
 up:
 	docker-compose -f zarf/docker-compose.yaml up -d --build
@@ -16,4 +16,5 @@ task-dir:
 task-test:
 	cd business/domain/taskbus && zsh
 
-
+test:
+	go test ./... -v
