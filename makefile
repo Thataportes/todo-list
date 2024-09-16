@@ -1,4 +1,4 @@
-.PHONY: up down db-logs mysql task-dir
+.PHONY: up down db-logs mysql task-dir test
 
 up:
 	docker-compose -f zarf/docker-compose.yaml up -d --build
@@ -8,9 +8,12 @@ down:
 
 db-logs:
 	docker-compose -f zarf/docker-compose.yaml logs dbmake
+
 mysql:
 	docker exec -it todolist bash -c "mysql -u root -p"
+
 task-dir:
 	cd api/services/task && zsh
 
-
+test:
+	go test ./... -v

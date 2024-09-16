@@ -47,12 +47,12 @@ func (a *App) QueryByID(ctx context.Context, id int) (Task, error) {
 }
 
 // Update modifies an existing task and returns the updated task.
-func (a *App) Update(ctx context.Context, ut UpdateTask) (Task, error) {
-	taskBus, err := a.taskBus.Update(ctx, toBusUpdateTask(ut))
+func (a *App) Update(ctx context.Context, ut UpdateTask) error {
+	err := a.taskBus.Update(ctx, toBusUpdateTask(ut))
 	if err != nil {
-		return Task{}, err
+		return err
 	}
-	return toAppTask(taskBus), nil
+	return nil
 }
 
 // Delete removes a task by its ID.
