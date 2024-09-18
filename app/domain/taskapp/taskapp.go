@@ -42,13 +42,12 @@ func (a *App) Query(ctx context.Context, r *http.Request) web.Encoder {
 	if err != nil {
 		return errs.New(errs.InternalOnlyLog, err)
 	}
-	return TaskList{Tasks: toAppTasks(tasksBus)}
+	return toAppTasks(tasksBus)
 }
 
 // QueryByID retrieves a task by its ID.
 func (a *App) QueryByID(ctx context.Context, r *http.Request) web.Encoder {
-	idStr := web.DecodeParam(r, "id")
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(web.DecodeParam(r, "id"))
 	if err != nil {
 		return errs.New(errs.InvalidArgument, err)
 	}
@@ -78,8 +77,7 @@ func (a *App) Update(ctx context.Context, r *http.Request) web.Encoder {
 
 // Delete removes a task by its ID.
 func (a *App) Delete(ctx context.Context, r *http.Request) web.Encoder {
-	idStr := web.DecodeParam(r, "id")
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(web.DecodeParam(r, "id"))
 	if err != nil {
 		return errs.New(errs.InvalidArgument, err)
 	}
@@ -94,8 +92,7 @@ func (a *App) Delete(ctx context.Context, r *http.Request) web.Encoder {
 
 // Finish marks a task as completed.
 func (a *App) Finish(ctx context.Context, r *http.Request) web.Encoder {
-	idStr := web.DecodeParam(r, "id")
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(web.DecodeParam(r, "id"))
 	if err != nil {
 		return errs.New(errs.InvalidArgument, err)
 	}

@@ -31,26 +31,13 @@ type Task struct {
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
-	FinishedAt  time.Time `json:"finished_at,omitempty"`
+	FinishedAt  time.Time `json:"finished_at"`
 }
 
+// Encode implements the web.Encoder interface for the Task type.
 func (t Task) Encode() ([]byte, string, error) {
 	data, err := json.Marshal(t)
 	return data, "application/json", err
-}
-
-// TaskList represents a list of tasks.
-type TaskList struct {
-	Tasks []Task
-}
-
-// Encode implements the web.Encoder interface.
-func (tl TaskList) Encode() ([]byte, string, error) {
-	data, err := json.Marshal(tl)
-	if err != nil {
-		return nil, "", err
-	}
-	return data, "application/json", nil
 }
 
 // toAppTask converts a task from the business layer to the application layer.
@@ -63,8 +50,17 @@ func toAppTask(taskBus taskbus.Task) Task {
 	}
 }
 
+// ToAppTasks represents a list of tasks in the application layer.
+type Tasks []Task
+
+// Encode implements the web.Encoder interface for the ToAppTasks type.
+func (ts Tasks) Encode() ([]byte, string, error) {
+	data, err := json.Marshal(ts)
+	return data, "application/json", err
+}
+
 // toAppTasks converts a slice of business layer tasks to application layer tasks.
-func toAppTasks(tasksBus []taskbus.Task) []Task {
+func toAppTasks(tasksBus []taskbus.Task) Task {
 	tasksApp := make([]Task, len(tasksBus))
 	for i, taskBus := range tasksBus {
 		tasksApp[i] = toAppTask(taskBus)
