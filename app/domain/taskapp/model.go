@@ -50,7 +50,7 @@ func toAppTask(taskBus taskbus.Task) Task {
 	}
 }
 
-// ToAppTasks represents a list of tasks in the application layer.
+// Tasks represents a list of tasks in the application layer.
 type Tasks []Task
 
 // Encode implements the web.Encoder interface for the ToAppTasks type.
@@ -60,7 +60,7 @@ func (ts Tasks) Encode() ([]byte, string, error) {
 }
 
 // toAppTasks converts a slice of business layer tasks to application layer tasks.
-func toAppTasks(tasksBus []taskbus.Task) Task {
+func toAppTasks(tasksBus []taskbus.Task) Tasks {
 	tasksApp := make([]Task, len(tasksBus))
 	for i, taskBus := range tasksBus {
 		tasksApp[i] = toAppTask(taskBus)
