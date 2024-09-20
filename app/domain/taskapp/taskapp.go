@@ -14,8 +14,7 @@ type App struct {
 	taskBus *taskbus.Business
 }
 
-// NewApp creates a new instance of App.
-func NewApp(taskBus *taskbus.Business) *App {
+func newApp(taskBus *taskbus.Business) *App {
 	return &App{
 		taskBus: taskBus,
 	}

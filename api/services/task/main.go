@@ -2,6 +2,7 @@ package main
 
 import (
 	"TODO-list/app/domain/taskapp"
+	"TODO-list/app/sdk/mux"
 	"TODO-list/business/domain/taskbus"
 	"context"
 	"database/sql"
@@ -21,6 +22,14 @@ func main() {
 		log.Fatal("Error connecting to the database:", err)
 	}
 	defer db.Close()
+
+	// cfgMux defines the configuration for the mux-based web API.
+	cfgMux := mux.Config{
+		DB: db,
+	}
+
+	// webAPI initializes a new WebAPI instance with the provided configuration.
+	webAPI, err := mux.WebAPI(cfgMux)
 
 	// Initialize the business layer with the database connection.
 	taskBus := taskbus.NewBusiness(db)
