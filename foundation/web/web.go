@@ -6,8 +6,11 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"log"
 	"net/http"
 	"regexp"
+
+	"github.com/gorilla/mux"
 )
 
 // Encoder defines behavior that can encode a data model and provide
@@ -204,5 +207,14 @@ func (a *App) FileServerReact(static embed.FS, dir string) error {
 
 // DecodeParam extracts a parameter from the URL and returns its value as a string.
 func DecodeParam(r *http.Request, key string) string {
-	return r.URL.Query().Get(key)
+	vars := mux.Vars(r)
+	if value, ok := vars[key]; ok {
+		return value
+	}
+
+	value := r.URL.Query().Get(key)
+	if value == "" {
+		log.Printf("Parameter '%s' not found in the URL or query string.\n", key)
+	}
+	return value
 }

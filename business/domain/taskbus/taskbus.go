@@ -86,9 +86,9 @@ func (s *Business) QueryByID(ctx context.Context, id int) (Task, error) {
 }
 
 // Update modifies task information in the database and returns the updated task.
-func (s *Business) Update(ctx context.Context, ut UpdateTask) error {
+func (s *Business) Update(ctx context.Context, id int, ut UpdateTask) error {
 	query := "UPDATE task SET title = ?, description = ? WHERE id = ?"
-	_, err := s.db.ExecContext(ctx, query, ut.Title, ut.Description, ut.ID)
+	_, err := s.db.ExecContext(ctx, query, ut.Title, ut.Description, id)
 	if err != nil {
 		return err
 	}

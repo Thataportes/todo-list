@@ -70,7 +70,6 @@ func toAppTasks(tasksBus []taskbus.Task) Tasks {
 
 // UpdateTask represents a task with updates to be applied.
 type UpdateTask struct {
-	ID          int    `json:"id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 }
@@ -83,7 +82,6 @@ func (ut *UpdateTask) Decode(data []byte) error {
 // toBusUpdateTask converts an UpdateTask from the application layer to the business layer.
 func toBusUpdateTask(ut UpdateTask) taskbus.UpdateTask {
 	return taskbus.UpdateTask{
-		ID:          ut.ID,
 		Title:       ut.Title,
 		Description: ut.Description,
 	}

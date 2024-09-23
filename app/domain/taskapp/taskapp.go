@@ -61,12 +61,17 @@ func (a *App) QueryByID(ctx context.Context, r *http.Request) web.Encoder {
 
 // Update modifies an existing task and returns the updated task.
 func (a *App) Update(ctx context.Context, r *http.Request) web.Encoder {
+	id, err := strconv.Atoi(web.DecodeParam(r, "id"))
+	if err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
 	var ut UpdateTask
 	if err := web.Decode(r, &ut); err != nil {
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	err := a.taskBus.Update(ctx, toBusUpdateTask(ut))
+	err = a.taskBus.Update(ctx, id, toBusUpdateTask(ut))
 	if err != nil {
 		return errs.New(errs.InternalOnlyLog, err)
 	}
