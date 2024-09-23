@@ -17,7 +17,7 @@ func Routes(web *web.App, cfg Config) {
 
 	web.HandlerFunc(http.MethodPost, "", "/api/tasks", app.Create, nil)
 	web.HandlerFunc(http.MethodGet, "", "/api/tasks", app.Query, nil)
-	web.HandlerFunc(http.MethodGet, "", "/api/tasks/:id", app.QueryByID, nil)
+	web.HandlerFunc(http.MethodGet, "", "/api/tasks/{id}", app.QueryByID, nil)
 	web.HandlerFunc(http.MethodPut, "", "/api/tasks/{id}", app.Update, nil)
 	web.HandlerFunc(http.MethodDelete, "", "/api/tasks/{id}", app.Delete, nil)
 	web.HandlerFunc(http.MethodPut, "", "/api/tasks/finish/{id}", app.Finish, nil)
