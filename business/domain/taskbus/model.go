@@ -33,7 +33,6 @@ func toBusinessTask(id int, title, description string, createdAt, finishedAt sql
 
 // UpdateTask represents a task with updates to be applied.
 type UpdateTask struct {
-	ID          int
 	Title       string
 	Description string
 }
