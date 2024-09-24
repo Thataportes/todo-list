@@ -73,16 +73,13 @@ func (s *Business) QueryByID(ctx context.Context, id int) (Task, error) {
 	query := "SELECT id, title, description, created_at, finished_at FROM task WHERE id = ?"
 	row := s.db.QueryRowContext(ctx, query, id)
 
-	var ID int
-	var title, description string
-	var createdAt, finishedAt sql.NullTime
-
-	err := row.Scan(&ID, &title, &description, &createdAt, &finishedAt)
+	var busTask Task
+	err := row.Scan(&busTask.ID, &busTask.Title, &busTask.Description, &busTask.CreatedAt, &busTask.FinishedAt)
 	if err != nil {
 		return Task{}, err
 	}
 
-	return toBusinessTask(ID, title, description, createdAt, finishedAt), nil
+	return busTask, nil
 }
 
 // Update modifies task information in the database and returns the updated task.
@@ -117,5 +114,6 @@ func (s *Business) Finish(ctx context.Context, id int) error {
 	if err != nil {
 		return fmt.Errorf("failed to finish task with ID %d: %v", id, err)
 	}
+
 	return nil
 }
