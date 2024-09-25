@@ -15,9 +15,7 @@ import (
 )
 
 func main() {
-
 	var log *logger.Logger
-
 	traceIDFn := func(ctx context.Context) string {
 		return otel.GetTraceID(ctx)
 	}
@@ -37,7 +35,6 @@ func main() {
 // run sets up the application, including database connection, server initialization,
 // and graceful shutdown logic.
 func run(ctx context.Context, log *logger.Logger) error {
-
 	log.BuildInfo(ctx)
 	log.Info(ctx, "startup", "status", "initializing database support")
 
