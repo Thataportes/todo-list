@@ -8,6 +8,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/go-sql-driver/mysql v1.8.1
+	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.9.0
 )
 
@@ -23,7 +24,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-require (
-	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/gorilla/mux v1.8.1 // indirect
-)
+require filippo.io/edwards25519 v1.1.0 // indirect
