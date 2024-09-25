@@ -7,7 +7,7 @@ down:
 	docker-compose -f zarf/docker-compose.yaml down -v
 
 db-logs:
-	docker-compose -f zarf/docker-compose.yaml logs dbmake
+	docker-compose -f zarf/docker-compose.yaml logs db
 
 mysql:
 	docker exec -it todolist bash -c "mysql -u root -p"

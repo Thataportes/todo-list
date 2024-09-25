@@ -7,11 +7,11 @@ import (
 
 // Task represents a task in the system.
 type Task struct {
-	ID          int
-	Title       string
-	Description string
-	FinishedAt  time.Time
-	CreatedAt   time.Time
+	ID          int          `json:"id"`
+	Title       string       `json:"title"`
+	Description string       `json:"description"`
+	CreatedAt   time.Time    `json:"created_at"`
+	FinishedAt  sql.NullTime `json:"finished_at"`
 }
 
 // NewTask represents a new task to be created.
@@ -27,7 +27,7 @@ func toBusinessTask(id int, title, description string, createdAt, finishedAt sql
 		Title:       title,
 		Description: description,
 		CreatedAt:   createdAt.Time,
-		FinishedAt:  finishedAt.Time,
+		FinishedAt:  finishedAt,
 	}
 }
 

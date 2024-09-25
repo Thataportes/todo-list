@@ -47,6 +47,7 @@ func toAppTask(taskBus taskbus.Task) Task {
 		Title:       taskBus.Title,
 		Description: taskBus.Description,
 		CreatedAt:   taskBus.CreatedAt,
+		FinishedAt:  taskBus.FinishedAt.Time,
 	}
 }
 
