@@ -5,3 +5,13 @@ CREATE TABLE task (
     created_at DATETIME null,
     finished_at DATETIME null
 );
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    status BOOLEAN NOT NULL DEFAULT TRUE, 
+    created_at DATETIME NULL,
+    last_updated_at DATETIME NULL
+);
+

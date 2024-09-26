@@ -5,6 +5,8 @@ import (
 	"TODO-list/business/domain/taskbus"
 	"TODO-list/foundation/logger"
 	"TODO-list/foundation/web"
+	"TODO-list/user/domain/usersapp"
+	"TODO-list/userbusiness/domain/userbus"
 	"context"
 	"database/sql"
 	"net/http"
@@ -28,6 +30,11 @@ func WebAPI(cfg Config) (http.Handler, error) {
 	taskapp.Routes(app, taskapp.Config{
 		TaskBus: taskBus,
 		Logger:  cfg.Log,
+	})
+
+	userBus := userbus.NewBusiness(cfg.DB)
+	usersapp.Routes(app, usersapp.Config{
+		UserBus: userBus,
 	})
 	return app, nil
 }
