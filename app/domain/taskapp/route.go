@@ -2,6 +2,7 @@ package taskapp
 
 import (
 	"TODO-list/business/domain/taskbus"
+	"TODO-list/foundation/logger"
 	"TODO-list/foundation/web"
 	"net/http"
 )
@@ -9,6 +10,7 @@ import (
 // Config holds the configuration dependencies for the application.
 type Config struct {
 	TaskBus *taskbus.Business
+	Logger  *logger.Logger
 }
 
 // Routes sets up the HTTP routes for the task-related API endpoints.
