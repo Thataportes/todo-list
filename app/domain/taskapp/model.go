@@ -2,14 +2,77 @@ package taskapp
 
 import (
 	"TODO-list/business/domain/taskbus"
+	"database/sql"
 	"encoding/json"
 	"time"
 )
+
+// AssignedTo é um tipo personalizado para serialização do campo `assigned_to`.
+type AssignedTo struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Valid bool   `json:"-"`
+}
+
+// MarshalJSON personaliza a codificação JSON do campo `AssignedTo`.
+func (a AssignedTo) MarshalJSON() ([]byte, error) {
+	if !a.Valid {
+		return []byte("null"), nil
+	}
+	return json.Marshal(struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	}{
+		ID:   a.ID,
+		Name: a.Name,
+	})
+}
+
+// NewAssignedTo cria um novo `AssignedTo` a partir de um `sql.NullInt32`.
+func NewAssignedTo(task taskbus.Task) AssignedTo {
+	return AssignedTo{
+		ID:    int(task.AssignedTo.Int32),
+		Name:  task.AssignedToName,
+		Valid: task.AssignedTo.Valid,
+	}
+}
+
+// CreatedBy é um tipo personalizado para o campo `created_by`.
+type CreatedBy struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Valid bool   `json:"-"`
+}
+
+// MarshalJSON personaliza a codificação JSON do campo `CreatedBy`.
+func (c CreatedBy) MarshalJSON() ([]byte, error) {
+	if !c.Valid {
+		return []byte("null"), nil
+	}
+	return json.Marshal(struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	}{
+		ID:   c.ID,
+		Name: c.Name,
+	})
+}
+
+// NewCreatedBy cria um novo `CreatedBy` a partir de um `taskbus.Task`.
+func NewCreatedBy(task taskbus.Task) CreatedBy {
+	return CreatedBy{
+		ID:    task.CreatedBy,
+		Name:  task.CreatedByName,
+		Valid: task.CreatedByName != "",
+	}
+}
 
 // NewTask represents a new task to be created.
 type NewTask struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
+	CreatedBy   int    `json:"created_by"`
+	AssignedTo  *int   `json:"assigned_to"`
 }
 
 // Decode implements the decoder interface.
@@ -19,19 +82,27 @@ func (nt *NewTask) Decode(data []byte) error {
 
 // toBusNewTask converts a NewTask from the application layer to the business layer.
 func toBusNewTask(nt NewTask) taskbus.NewTask {
+	assignedTo := sql.NullInt32{Int32: 1}
+	if nt.AssignedTo != nil {
+		assignedTo = sql.NullInt32{Int32: int32(*nt.AssignedTo), Valid: true}
+	}
 	return taskbus.NewTask{
 		Title:       nt.Title,
 		Description: nt.Description,
+		CreatedBy:   nt.CreatedBy,
+		AssignedTo:  assignedTo,
 	}
 }
 
 // Task represents a task in the system.
 type Task struct {
-	ID          int       `json:"id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-	FinishedAt  time.Time `json:"finished_at"`
+	ID          int        `json:"id"`
+	Title       string     `json:"title"`
+	Description string     `json:"description"`
+	CreatedAt   time.Time  `json:"created_at"`
+	FinishedAt  time.Time  `json:"finished_at"`
+	CreatedBy   CreatedBy  `json:"created_by"`
+	AssignedTo  AssignedTo `json:"assigned_to"`
 }
 
 // Encode implements the web.Encoder interface for the Task type.
@@ -48,6 +119,16 @@ func toAppTask(taskBus taskbus.Task) Task {
 		Description: taskBus.Description,
 		CreatedAt:   taskBus.CreatedAt,
 		FinishedAt:  taskBus.FinishedAt.Time,
+		CreatedBy: CreatedBy{
+			ID:    taskBus.CreatedBy,
+			Name:  taskBus.CreatedByName,
+			Valid: taskBus.CreatedByName != "",
+		},
+		AssignedTo: AssignedTo{
+			ID:    int(taskBus.AssignedTo.Int32),
+			Name:  taskBus.AssignedToName,
+			Valid: taskBus.AssignedTo.Valid,
+		},
 	}
 }
 
@@ -73,6 +154,8 @@ func toAppTasks(tasksBus []taskbus.Task) Tasks {
 type UpdateTask struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
+	CreatedBy   *int   `json:"created_by"`
+	AssignedTo  *int   `json:"assigned_to"`
 }
 
 // Decode implements the decoder interface.
@@ -82,8 +165,14 @@ func (ut *UpdateTask) Decode(data []byte) error {
 
 // toBusUpdateTask converts an UpdateTask from the application layer to the business layer.
 func toBusUpdateTask(ut UpdateTask) taskbus.UpdateTask {
+	assignedTo := sql.NullInt32{Valid: false}
+	if ut.AssignedTo != nil {
+		assignedTo = sql.NullInt32{Int32: int32(*ut.AssignedTo), Valid: true}
+	}
+
 	return taskbus.UpdateTask{
 		Title:       ut.Title,
 		Description: ut.Description,
+		AssignedTo:  assignedTo,
 	}
 }

@@ -3,7 +3,11 @@ CREATE TABLE task (
     title varchar(255),
     description text,
     created_at DATETIME null,
-    finished_at DATETIME null
+    finished_at DATETIME null,
+    created_by INT NOT NULL,
+    assigned_to INT NULL
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (assigned_to) REFERENCES users(id)
 );
 
 CREATE TABLE users (

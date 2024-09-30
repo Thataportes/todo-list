@@ -1,4 +1,4 @@
-.PHONY: up down db-logs mysql task-dir test
+.PHONY: up down db-logs mysql task-dir test api
 
 up:
 	docker-compose -f zarf/docker-compose.yaml up -d --build
@@ -17,3 +17,5 @@ task-dir:
 
 test:
 	go test ./... -v
+api:
+	go run api/services/task/main.go 
