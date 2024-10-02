@@ -2,11 +2,11 @@ package mux
 
 import (
 	"TODO-list/app/domain/taskapp"
+	"TODO-list/app/domain/userapp"
 	"TODO-list/business/domain/taskbus"
+	"TODO-list/business/domain/userbus"
 	"TODO-list/foundation/logger"
 	"TODO-list/foundation/web"
-	"TODO-list/user/domain/usersapp"
-	"TODO-list/userbusiness/domain/userbus"
 	"context"
 	"database/sql"
 	"net/http"
@@ -25,16 +25,17 @@ func WebAPI(cfg Config) (http.Handler, error) {
 	}
 	app := web.NewApp(logger)
 
-	taskBus := taskbus.NewBusiness(cfg.DB)
+	userbus := userbus.NewBusiness(cfg.DB)
+	taskBus := taskbus.NewBusiness(cfg.DB, userbus)
+
+	userapp.Routes(app, userapp.Config{
+		UserBus: userbus,
+		Logger:  cfg.Log,
+	})
 
 	taskapp.Routes(app, taskapp.Config{
 		TaskBus: taskBus,
 		Logger:  cfg.Log,
-	})
-
-	userBus := userbus.NewBusiness(cfg.DB)
-	usersapp.Routes(app, usersapp.Config{
-		UserBus: userBus,
 	})
 	return app, nil
 }

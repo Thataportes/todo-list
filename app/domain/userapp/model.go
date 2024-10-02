@@ -1,7 +1,7 @@
-package usersapp
+package userapp
 
 import (
-	"TODO-list/userbusiness/domain/userbus"
+	"TODO-list/business/domain/userbus"
 	"encoding/json"
 	"time"
 )

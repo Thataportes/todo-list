@@ -7,63 +7,55 @@ import (
 	"time"
 )
 
-// AssignedTo é um tipo personalizado para serialização do campo `assigned_to`.
+// AssignedTo is a custom type for serializing the 'assigned_to' field.
 type AssignedTo struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Valid bool   `json:"-"`
+	ID    int  `json:"id"`
+	Valid bool `json:"-"`
 }
 
-// MarshalJSON personaliza a codificação JSON do campo `AssignedTo`.
+// MarshalJSON customizes the JSON encoding of the 'AssignedTo' field.
 func (a AssignedTo) MarshalJSON() ([]byte, error) {
 	if !a.Valid {
 		return []byte("null"), nil
 	}
 	return json.Marshal(struct {
-		ID   int    `json:"id"`
-		Name string `json:"name"`
+		ID int `json:"id"`
 	}{
-		ID:   a.ID,
-		Name: a.Name,
+		ID: a.ID,
 	})
 }
 
-// NewAssignedTo cria um novo `AssignedTo` a partir de um `sql.NullInt32`.
+// NewAssignedTo creates a new 'AssignedTo' object from the business layer 'task'.
 func NewAssignedTo(task taskbus.Task) AssignedTo {
 	return AssignedTo{
 		ID:    int(task.AssignedTo.Int32),
-		Name:  task.AssignedToName,
 		Valid: task.AssignedTo.Valid,
 	}
 }
 
-// CreatedBy é um tipo personalizado para o campo `created_by`.
+// CreatedBy is a custom type for the 'created_by' field.
 type CreatedBy struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Valid bool   `json:"-"`
+	ID    int  `json:"id"`
+	Valid bool `json:"-"`
 }
 
-// MarshalJSON personaliza a codificação JSON do campo `CreatedBy`.
+// MarshalJSON customizes the JSON encoding of the 'CreatedBy' field.
 func (c CreatedBy) MarshalJSON() ([]byte, error) {
 	if !c.Valid {
 		return []byte("null"), nil
 	}
 	return json.Marshal(struct {
-		ID   int    `json:"id"`
-		Name string `json:"name"`
+		ID int `json:"id"`
 	}{
-		ID:   c.ID,
-		Name: c.Name,
+		ID: c.ID,
 	})
 }
 
-// NewCreatedBy cria um novo `CreatedBy` a partir de um `taskbus.Task`.
+// NewCreatedBy creates a new 'CreatedBy' object from the business layer 'task'.
 func NewCreatedBy(task taskbus.Task) CreatedBy {
 	return CreatedBy{
 		ID:    task.CreatedBy,
-		Name:  task.CreatedByName,
-		Valid: task.CreatedByName != "",
+		Valid: task.CreatedBy != 0,
 	}
 }
 
@@ -121,12 +113,10 @@ func toAppTask(taskBus taskbus.Task) Task {
 		FinishedAt:  taskBus.FinishedAt.Time,
 		CreatedBy: CreatedBy{
 			ID:    taskBus.CreatedBy,
-			Name:  taskBus.CreatedByName,
-			Valid: taskBus.CreatedByName != "",
+			Valid: taskBus.CreatedBy != 0,
 		},
 		AssignedTo: AssignedTo{
 			ID:    int(taskBus.AssignedTo.Int32),
-			Name:  taskBus.AssignedToName,
 			Valid: taskBus.AssignedTo.Valid,
 		},
 	}

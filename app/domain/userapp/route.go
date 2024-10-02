@@ -1,14 +1,16 @@
-package usersapp
+package userapp
 
 import (
+	"TODO-list/business/domain/userbus"
+	"TODO-list/foundation/logger"
 	"TODO-list/foundation/web"
-	"TODO-list/userbusiness/domain/userbus"
 	"net/http"
 )
 
 // Config contains the dependencies required for initializing the user application.
 type Config struct {
 	UserBus *userbus.Business
+	Logger  *logger.Logger
 }
 
 // Routes sets up the HTTP routes for the user-related API endpoints.

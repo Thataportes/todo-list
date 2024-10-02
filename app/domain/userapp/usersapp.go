@@ -1,9 +1,9 @@
-package usersapp
+package userapp
 
 import (
 	"TODO-list/app/sdk/errs"
+	"TODO-list/business/domain/userbus"
 	"TODO-list/foundation/web"
-	"TODO-list/userbusiness/domain/userbus"
 	"context"
 	"net/http"
 	"strconv"
@@ -14,6 +14,7 @@ type App struct {
 	userBus *userbus.Business
 }
 
+// newApp creates a new instance of the App, initializing it with the business layer (userBus).
 func newApp(userBus *userbus.Business) *App {
 	return &App{
 		userBus: userBus,

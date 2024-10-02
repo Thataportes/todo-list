@@ -31,7 +31,14 @@ func (s *Business) Create(ctx context.Context, nu NewUser) (User, error) {
 		return User{}, err
 	}
 
-	return toBusinessUser(int(lastInsertID), nu.Name, nu.Email, true, createdAt, lastUpdatedAt), nil
+	return User{
+		ID:            int(lastInsertID),
+		Name:          nu.Name,
+		Email:         nu.Email,
+		Status:        true,
+		CreatedAt:     createdAt,
+		LastUpdatedAt: lastUpdatedAt,
+	}, nil
 }
 
 // Query retrieves all users from the database and returns them as a slice of User structs.
@@ -51,9 +58,7 @@ func (s *Business) Query(ctx context.Context) ([]User, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		user := toBusinessUser(busUser.ID, busUser.Name, busUser.Email, busUser.Status, busUser.CreatedAt, busUser.LastUpdatedAt)
-		users = append(users, user)
+		users = append(users, busUser)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -109,4 +114,15 @@ func (s *Business) Deactivate(ctx context.Context, id int) error {
 	query := "UPDATE users SET status = false, last_updated_at = ? WHERE id = ?"
 	_, err := s.db.ExecContext(ctx, query, lastUpdatedAt, id)
 	return err
+}
+
+// IsUserActive checks if a user is active in the system based on their user ID.
+func (s *Business) IsUserActive(ctx context.Context, userID int) (bool, error) {
+	var status bool
+	query := "SELECT status FROM users WHERE id = ?"
+	err := s.db.QueryRowContext(ctx, query, userID).Scan(&status)
+	if err != nil {
+		return false, err
+	}
+	return status, nil
 }

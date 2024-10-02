@@ -6,8 +6,6 @@ CREATE TABLE task (
     finished_at DATETIME null,
     created_by INT NOT NULL,
     assigned_to INT NULL
-    FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (assigned_to) REFERENCES users(id)
 );
 
 CREATE TABLE users (

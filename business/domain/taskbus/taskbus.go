@@ -11,16 +11,27 @@ import (
 
 // Business handles business logic and persistence of tasks.
 type Business struct {
-	db *sql.DB
+	db          *sql.DB
+	userService UserService
 }
 
 // NewBusiness creates a new instance of Business.
-func NewBusiness(db *sql.DB) *Business {
-	return &Business{db: db}
+func NewBusiness(db *sql.DB, userService UserService) *Business {
+	return &Business{
+		db:          db,
+		userService: userService,
+	}
 }
 
 // Create adds a new task to the database and returns the created task.
 func (s *Business) Create(ctx context.Context, nt NewTask) (Task, error) {
+	active, err := s.userService.IsUserActive(ctx, nt.CreatedBy)
+	if err != nil {
+		return Task{}, err
+	}
+	if !active {
+		return Task{}, fmt.Errorf("user with ID %d is not active", nt.CreatedBy)
+	}
 	createdAt := sql.NullTime{Time: time.Now(), Valid: true}
 	finishedAt := sql.NullTime{Valid: false}
 
@@ -35,35 +46,20 @@ func (s *Business) Create(ctx context.Context, nt NewTask) (Task, error) {
 		return Task{}, err
 	}
 
-	createdByName, err := s.getUserNameByID(ctx, nt.CreatedBy)
-	if err != nil {
-		return Task{}, err
-	}
-
-	assignedToName := ""
-	if nt.AssignedTo.Valid {
-		assignedToName, err = s.getUserNameByID(ctx, int(nt.AssignedTo.Int32))
-		if err != nil {
-			return Task{}, err
-		}
-	}
-
-	return toBusinessTask(int(lastInsertID), nt.Title, nt.Description, createdAt, finishedAt, nt.CreatedBy, createdByName, nt.AssignedTo, assignedToName), nil
+	return Task{
+		ID:          int(lastInsertID),
+		Title:       nt.Title,
+		Description: nt.Description,
+		CreatedAt:   createdAt.Time,
+		FinishedAt:  finishedAt,
+		CreatedBy:   nt.CreatedBy,
+		AssignedTo:  nt.AssignedTo,
+	}, nil
 }
 
 // Query retrieves all tasks from the database.
 func (s *Business) Query(ctx context.Context) ([]Task, error) {
-	query := `SELECT 
-				t.id, t.title, t.description, t.created_at, t.finished_at, 
-				t.created_by, cu.name AS created_by_name, 
-				t.assigned_to, au.name AS assigned_to_name 
-			  FROM 
-				task t 
-			  LEFT JOIN 
-				users cu ON t.created_by = cu.id 
-			  LEFT JOIN 
-				users au ON t.assigned_to = au.id`
-
+	query := `SELECT t.id, t.title, t.description, t.created_at, t.finished_at, t.created_by, t.assigned_to FROM task t `
 	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -72,28 +68,11 @@ func (s *Business) Query(ctx context.Context) ([]Task, error) {
 
 	var tasks []Task
 	for rows.Next() {
-		var id, createdBy int
-		var assignedTo sql.NullInt32
-		var title, description string
-		var createdByName, assignedToName sql.NullString
-		var createdAt, finishedAt sql.NullTime
-
-		err := rows.Scan(&id, &title, &description, &createdAt, &finishedAt, &createdBy, &createdByName, &assignedTo, &assignedToName)
+		var task Task
+		err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.CreatedAt, &task.FinishedAt, &task.CreatedBy, &task.AssignedTo)
 		if err != nil {
 			return nil, err
 		}
-
-		task := toBusinessTask(
-			id,
-			title,
-			description,
-			createdAt,
-			finishedAt,
-			createdBy,
-			createdByName.String,
-			assignedTo,
-			assignedToName.String,
-		)
 		tasks = append(tasks, task)
 	}
 
@@ -106,27 +85,16 @@ func (s *Business) Query(ctx context.Context) ([]Task, error) {
 
 // QueryByID retrieves a task by its ID.
 func (s *Business) QueryByID(ctx context.Context, id int) (Task, error) {
-	query := `SELECT 
-				t.id, t.title, t.description, t.created_at, t.finished_at, 
-				t.created_by, cu.name AS created_by_name, 
-				t.assigned_to, au.name AS assigned_to_name 
-			  FROM task t 
-			  LEFT JOIN users cu ON t.created_by = cu.id 
-			  LEFT JOIN users au ON t.assigned_to = au.id 
-			  WHERE t.id = ?`
+	query := `SELECT t.id, t.title, t.description, t.created_at, t.finished_at, t.created_by, t.assigned_to FROM task t WHERE t.id = ?`
 	row := s.db.QueryRowContext(ctx, query, id)
 
-	var busTask Task
-	var createdByName, assignedToName sql.NullString
-	err := row.Scan(&busTask.ID, &busTask.Title, &busTask.Description, &busTask.CreatedAt, &busTask.FinishedAt, &busTask.CreatedBy, &createdByName, &busTask.AssignedTo, &assignedToName)
+	var task Task
+	err := row.Scan(&task.ID, &task.Title, &task.Description, &task.CreatedAt, &task.FinishedAt, &task.CreatedBy, &task.AssignedTo)
 	if err != nil {
 		return Task{}, err
 	}
 
-	busTask.CreatedByName = createdByName.String
-	busTask.AssignedToName = assignedToName.String
-
-	return busTask, nil
+	return task, nil
 }
 
 // Update modifies task information in the database and returns the updated task.
