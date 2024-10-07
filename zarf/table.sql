@@ -14,6 +14,6 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     status BOOLEAN NOT NULL DEFAULT TRUE, 
     created_at DATETIME NULL,
-    last_updated_at DATETIME NULL
+    updated_at DATETIME NULL
 );
 

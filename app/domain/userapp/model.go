@@ -27,12 +27,12 @@ func toBusNewUser(nu NewUser) userbus.NewUser {
 
 // User represents a user entity in the system with all relevant fields.
 type User struct {
-	ID            int       `json:"id"`
-	Name          string    `json:"name"`
-	Email         string    `json:"email"`
-	Status        bool      `json:"status"`
-	CreatedAt     time.Time `json:"created_at"`
-	LastUpdatedAt time.Time `json:"last_updated_at"`
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Active    bool      `json:"active"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // Encode encodes the User struct into a JSON byte slice.
@@ -44,12 +44,12 @@ func (u User) Encode() ([]byte, string, error) {
 // toAppUser converts a User struct from the business layer to the application layer representation.
 func toAppUser(userBus userbus.User) User {
 	return User{
-		ID:            userBus.ID,
-		Name:          userBus.Name,
-		Email:         userBus.Email,
-		Status:        userBus.Status,
-		CreatedAt:     userBus.CreatedAt.Time,
-		LastUpdatedAt: userBus.LastUpdatedAt.Time,
+		ID:        userBus.ID,
+		Name:      userBus.Name,
+		Email:     userBus.Email,
+		Active:    userBus.Active,
+		CreatedAt: userBus.CreatedAt.Time,
+		UpdatedAt: userBus.UpdatedAt.Time,
 	}
 }
 
@@ -75,7 +75,7 @@ func toAppUsers(usersBus []userbus.User) Users {
 type UpdateUser struct {
 	Name   string `json:"name"`
 	Email  string `json:"email"`
-	Status bool   `json:"status"`
+	Active bool   `json:"active"`
 }
 
 // Decode decodes a JSON byte slice into an UpdateUser struct.
@@ -86,8 +86,7 @@ func (uu *UpdateUser) Decode(data []byte) error {
 // toBusUpdateUser converts an UpdateUser struct from the application layer to the business layer representation.
 func toBusUpdateUser(uu UpdateUser) userbus.UpdateUser {
 	return userbus.UpdateUser{
-		Name:   uu.Name,
-		Email:  uu.Email,
-		Status: uu.Status,
+		Name:  uu.Name,
+		Email: uu.Email,
 	}
 }

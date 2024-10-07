@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"TODO-list/userbusiness/domain/userbus"
+	"TODO-list/business/domain/userbus"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +26,7 @@ func setupMockDB(t *testing.T) {
 }
 
 func mockUserRows() *sqlmock.Rows {
-	return sqlmock.NewRows([]string{"id", "name", "email", "status", "created_at", "last_updated_at"}).
+	return sqlmock.NewRows([]string{"id", "name", "email", "active", "created_at", "updated_at"}).
 		AddRow(1, "User 1", "user1@example.com", true, time.Now(), time.Now()).
 		AddRow(2, "User 2", "user2@example.com", true, time.Now(), time.Now())
 }
@@ -51,9 +51,9 @@ func TestCreate(t *testing.T) {
 	assert.Equal(t, 1, user.ID)
 	assert.Equal(t, "New User", user.Name)
 	assert.Equal(t, "newuser@example.com", user.Email)
-	assert.True(t, user.Status)
+	assert.True(t, user.Active)
 	assert.True(t, user.CreatedAt.Valid)
-	assert.True(t, user.LastUpdatedAt.Valid)
+	assert.True(t, user.UpdatedAt.Valid)
 	assert.True(t, user.CreatedAt.Time.After(time.Now().Add(-time.Hour)))
 	assertMockExpectations(t, mock)
 }
@@ -62,7 +62,7 @@ func TestQuery(t *testing.T) {
 	setupMockDB(t)
 	defer db.Close()
 
-	mock.ExpectQuery("SELECT id, name, email, status, created_at, last_updated_at FROM users").
+	mock.ExpectQuery("SELECT id, name, email, active, created_at, updated_at FROM users").
 		WillReturnRows(mockUserRows())
 
 	ctx := context.Background()
@@ -72,9 +72,9 @@ func TestQuery(t *testing.T) {
 	assert.Len(t, users, 2)
 	assert.Equal(t, "User 1", users[0].Name)
 	assert.Equal(t, "user1@example.com", users[0].Email)
-	assert.True(t, users[0].Status)
+	assert.True(t, users[0].Active)
 	assert.True(t, users[0].CreatedAt.Valid)
-	assert.True(t, users[0].LastUpdatedAt.Valid)
+	assert.True(t, users[0].UpdatedAt.Valid)
 	assert.True(t, users[0].CreatedAt.Time.After(time.Now().Add(-time.Hour)))
 	assertMockExpectations(t, mock)
 }
@@ -83,10 +83,10 @@ func TestQueryByID(t *testing.T) {
 	setupMockDB(t)
 	defer db.Close()
 
-	row := sqlmock.NewRows([]string{"id", "name", "email", "status", "created_at", "last_updated_at"}).
+	row := sqlmock.NewRows([]string{"id", "name", "email", "active", "created_at", "updated_at"}).
 		AddRow(1, "User 1", "user1@example.com", true, time.Now(), time.Now())
 
-	mock.ExpectQuery("SELECT id, name, email, status, created_at, last_updated_at FROM users WHERE id = ?").
+	mock.ExpectQuery("SELECT id, name, email, active, created_at, updated_at FROM users WHERE id = ?").
 		WithArgs(1).
 		WillReturnRows(row)
 
@@ -96,9 +96,9 @@ func TestQueryByID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "User 1", user.Name)
 	assert.Equal(t, "user1@example.com", user.Email)
-	assert.True(t, user.Status)
+	assert.True(t, user.Active)
 	assert.True(t, user.CreatedAt.Valid)
-	assert.True(t, user.LastUpdatedAt.Valid)
+	assert.True(t, user.UpdatedAt.Valid)
 	assert.True(t, user.CreatedAt.Time.After(time.Now().Add(-time.Hour)))
 	assertMockExpectations(t, mock)
 }
@@ -107,10 +107,10 @@ func TestQueryByEmail(t *testing.T) {
 	setupMockDB(t)
 	defer db.Close()
 
-	row := sqlmock.NewRows([]string{"id", "name", "email", "status", "created_at", "last_updated_at"}).
+	row := sqlmock.NewRows([]string{"id", "name", "email", "active", "created_at", "updated_at"}).
 		AddRow(1, "User 1", "user1@example.com", true, time.Now(), time.Now())
 
-	mock.ExpectQuery("SELECT id, name, email, status, created_at, last_updated_at FROM users WHERE email = ?").
+	mock.ExpectQuery("SELECT id, name, email, active, created_at, updated_at FROM users WHERE email = ?").
 		WithArgs("user1@example.com").
 		WillReturnRows(row)
 
@@ -120,9 +120,9 @@ func TestQueryByEmail(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "User 1", user.Name)
 	assert.Equal(t, "user1@example.com", user.Email)
-	assert.True(t, user.Status)
+	assert.True(t, user.Active)
 	assert.True(t, user.CreatedAt.Valid)
-	assert.True(t, user.LastUpdatedAt.Valid)
+	assert.True(t, user.UpdatedAt.Valid)
 	assert.True(t, user.CreatedAt.Time.After(time.Now().Add(-time.Hour)))
 	assertMockExpectations(t, mock)
 }
@@ -131,12 +131,12 @@ func TestUpdate(t *testing.T) {
 	setupMockDB(t)
 	defer db.Close()
 
-	mock.ExpectExec("^UPDATE users SET name = \\?, email = \\?, status = \\?, last_updated_at = \\? WHERE id = \\?$").
+	mock.ExpectExec("^UPDATE users SET name = \\?, email = \\?, active = \\?, updated_at = \\? WHERE id = \\?$").
 		WithArgs("Updated Name", "updated@example.com", true, sqlmock.AnyArg(), 1).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	ctx := context.Background()
-	updateUser := userbus.UpdateUser{Name: "Updated Name", Email: "updated@example.com", Status: true}
+	updateUser := userbus.UpdateUser{Name: "Updated Name", Email: "updated@example.com", Active: true}
 	err := business.Update(ctx, 1, updateUser)
 
 	assert.NoError(t, err)
@@ -147,7 +147,7 @@ func TestDeactivate(t *testing.T) {
 	setupMockDB(t)
 	defer db.Close()
 
-	mock.ExpectExec("^UPDATE users SET status = false, last_updated_at = \\? WHERE id = \\?$").
+	mock.ExpectExec("^UPDATE users SET active = false, updated_at = \\? WHERE id = \\?$").
 		WithArgs(sqlmock.AnyArg(), 1).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 

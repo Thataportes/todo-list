@@ -25,11 +25,11 @@ func WebAPI(cfg Config) (http.Handler, error) {
 	}
 	app := web.NewApp(logger)
 
-	userbus := userbus.NewBusiness(cfg.DB)
-	taskBus := taskbus.NewBusiness(cfg.DB, userbus)
+	userBus := userbus.NewBusiness(cfg.DB)
+	taskBus := taskbus.NewBusiness(cfg.DB, userBus)
 
 	userapp.Routes(app, userapp.Config{
-		UserBus: userbus,
+		UserBus: userBus,
 		Logger:  cfg.Log,
 	})
 

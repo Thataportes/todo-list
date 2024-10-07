@@ -1,7 +1,6 @@
 package taskbus
 
 import (
-	"context"
 	"database/sql"
 	"time"
 )
@@ -44,9 +43,4 @@ type UpdateTask struct {
 	Title       string
 	Description string
 	AssignedTo  sql.NullInt32
-}
-
-// UserService defines an interface for user-related operations.
-type UserService interface {
-	IsUserActive(ctx context.Context, userID int) (bool, error)
 }

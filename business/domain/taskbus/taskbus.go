@@ -1,6 +1,7 @@
 package taskbus
 
 import (
+	"TODO-list/business/domain/userbus"
 	"context"
 	"database/sql"
 	"fmt"
@@ -11,27 +12,38 @@ import (
 
 // Business handles business logic and persistence of tasks.
 type Business struct {
-	db          *sql.DB
-	userService UserService
+	db      *sql.DB
+	userBus *userbus.Business
 }
 
 // NewBusiness creates a new instance of Business.
-func NewBusiness(db *sql.DB, userService UserService) *Business {
+func NewBusiness(db *sql.DB, userBus *userbus.Business) *Business {
 	return &Business{
-		db:          db,
-		userService: userService,
+		db:      db,
+		userBus: userBus,
 	}
 }
 
 // Create adds a new task to the database and returns the created task.
 func (s *Business) Create(ctx context.Context, nt NewTask) (Task, error) {
-	active, err := s.userService.IsUserActive(ctx, nt.CreatedBy)
+	active, err := s.userBus.IsUserActive(ctx, nt.CreatedBy)
 	if err != nil {
 		return Task{}, err
 	}
 	if !active {
 		return Task{}, fmt.Errorf("user with ID %d is not active", nt.CreatedBy)
 	}
+
+	if nt.AssignedTo.Valid {
+		assignedActive, err := s.userBus.IsUserActive(ctx, int(nt.AssignedTo.Int32))
+		if err != nil {
+			return Task{}, err
+		}
+		if !assignedActive {
+			return Task{}, fmt.Errorf("assigned user with ID %d is not active", nt.AssignedTo.Int32)
+		}
+	}
+
 	createdAt := sql.NullTime{Time: time.Now(), Valid: true}
 	finishedAt := sql.NullTime{Valid: false}
 
@@ -59,7 +71,7 @@ func (s *Business) Create(ctx context.Context, nt NewTask) (Task, error) {
 
 // Query retrieves all tasks from the database.
 func (s *Business) Query(ctx context.Context) ([]Task, error) {
-	query := `SELECT t.id, t.title, t.description, t.created_at, t.finished_at, t.created_by, t.assigned_to FROM task t `
+	query := "SELECT id, title, description, created_at, finished_at, created_by, assigned_to FROM task"
 	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -85,7 +97,7 @@ func (s *Business) Query(ctx context.Context) ([]Task, error) {
 
 // QueryByID retrieves a task by its ID.
 func (s *Business) QueryByID(ctx context.Context, id int) (Task, error) {
-	query := `SELECT t.id, t.title, t.description, t.created_at, t.finished_at, t.created_by, t.assigned_to FROM task t WHERE t.id = ?`
+	query := "SELECT id, title, description, created_at, finished_at, created_by, assigned_to FROM task WHERE id = ?"
 	row := s.db.QueryRowContext(ctx, query, id)
 
 	var task Task
