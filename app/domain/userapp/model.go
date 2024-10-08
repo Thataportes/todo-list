@@ -73,9 +73,8 @@ func toAppUsers(usersBus []userbus.User) Users {
 
 // UpdateUser represents the input data required to update an existing user.
 type UpdateUser struct {
-	Name   string `json:"name"`
-	Email  string `json:"email"`
-	Active bool   `json:"active"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
 // Decode decodes a JSON byte slice into an UpdateUser struct.

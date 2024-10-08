@@ -67,6 +67,9 @@ func (a *App) QueryById(ctx context.Context, r *http.Request) web.Encoder {
 func (a *App) QueryByEmail(ctx context.Context, r *http.Request) web.Encoder {
 	email := web.Param(r, "email")
 
+	if email == "" {
+		return errs.New(errs.InvalidArgument, fmt.Errorf("email cannot be empty"))
+	}
 	_, err := mail.ParseAddress(email)
 	if err != nil {
 		return errs.New(errs.InvalidArgument, fmt.Errorf("invalid email format: %v", err))

@@ -19,9 +19,9 @@ func NewBusiness(db *sql.DB) *Business {
 // Create inserts a new user into the database and returns the created user.
 func (s *Business) Create(ctx context.Context, nu NewUser) (User, error) {
 	createdAt := sql.NullTime{Time: time.Now(), Valid: true}
-	UpdatedAt := sql.NullTime{Time: createdAt.Time, Valid: true}
+	updatedAt := sql.NullTime{Time: createdAt.Time, Valid: true}
 	query := "INSERT INTO users (name, email, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?)"
-	result, err := s.db.ExecContext(ctx, query, nu.Name, nu.Email, true, createdAt, UpdatedAt)
+	result, err := s.db.ExecContext(ctx, query, nu.Name, nu.Email, true, createdAt, updatedAt)
 	if err != nil {
 		return User{}, err
 	}
@@ -37,7 +37,7 @@ func (s *Business) Create(ctx context.Context, nu NewUser) (User, error) {
 		Email:     nu.Email,
 		Active:    true,
 		CreatedAt: createdAt,
-		UpdatedAt: UpdatedAt,
+		UpdatedAt: updatedAt,
 	}, nil
 }
 

@@ -122,7 +122,6 @@ func toAppTasks(tasksBus []taskbus.Task) Tasks {
 type UpdateTask struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	CreatedBy   *int   `json:"created_by"`
 	AssignedTo  *int   `json:"assigned_to"`
 }
 
