@@ -24,20 +24,6 @@ type NewTask struct {
 	AssignedTo  sql.NullInt32
 }
 
-// toBusinessTask converts data into a business Task model.
-func toBusinessTask(id int, title, description string, createdAt, finishedAt sql.NullTime, createdBy int, assignedTo sql.NullInt32) Task {
-
-	return Task{
-		ID:          id,
-		Title:       title,
-		Description: description,
-		CreatedAt:   createdAt.Time,
-		FinishedAt:  finishedAt,
-		CreatedBy:   createdBy,
-		AssignedTo:  assignedTo,
-	}
-}
-
 // UpdateTask represents a task with updates to be applied.
 type UpdateTask struct {
 	Title       string

@@ -25,14 +25,6 @@ func (a AssignedTo) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// NewAssignedTo creates a new 'AssignedTo' object from the business layer 'task'.
-func NewAssignedTo(task taskbus.Task) AssignedTo {
-	return AssignedTo{
-		ID:    int(task.AssignedTo.Int32),
-		Valid: task.AssignedTo.Valid,
-	}
-}
-
 // CreatedBy is a custom type for the 'created_by' field.
 type CreatedBy struct {
 	ID    int  `json:"id"`
@@ -49,14 +41,6 @@ func (c CreatedBy) MarshalJSON() ([]byte, error) {
 	}{
 		ID: c.ID,
 	})
-}
-
-// NewCreatedBy creates a new 'CreatedBy' object from the business layer 'task'.
-func NewCreatedBy(task taskbus.Task) CreatedBy {
-	return CreatedBy{
-		ID:    task.CreatedBy,
-		Valid: task.CreatedBy != 0,
-	}
 }
 
 // NewTask represents a new task to be created.
@@ -88,13 +72,13 @@ func toBusNewTask(nt NewTask) taskbus.NewTask {
 
 // Task represents a task in the system.
 type Task struct {
-	ID          int        `json:"id"`
-	Title       string     `json:"title"`
-	Description string     `json:"description"`
-	CreatedAt   time.Time  `json:"created_at"`
-	FinishedAt  time.Time  `json:"finished_at"`
-	CreatedBy   CreatedBy  `json:"created_by"`
-	AssignedTo  AssignedTo `json:"assigned_to"`
+	ID          int       `json:"id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	FinishedAt  time.Time `json:"finished_at"`
+	CreatedBy   int       `json:"created_by"`
+	AssignedTo  int       `json:"assigned_to"`
 }
 
 // Encode implements the web.Encoder interface for the Task type.
@@ -111,14 +95,8 @@ func toAppTask(taskBus taskbus.Task) Task {
 		Description: taskBus.Description,
 		CreatedAt:   taskBus.CreatedAt,
 		FinishedAt:  taskBus.FinishedAt.Time,
-		CreatedBy: CreatedBy{
-			ID:    taskBus.CreatedBy,
-			Valid: taskBus.CreatedBy != 0,
-		},
-		AssignedTo: AssignedTo{
-			ID:    int(taskBus.AssignedTo.Int32),
-			Valid: taskBus.AssignedTo.Valid,
-		},
+		CreatedBy:   taskBus.CreatedBy,
+		AssignedTo:  int(taskBus.AssignedTo.Int32),
 	}
 }
 

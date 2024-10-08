@@ -26,20 +26,20 @@ func NewBusiness(db *sql.DB, userBus *userbus.Business) *Business {
 
 // Create adds a new task to the database and returns the created task.
 func (s *Business) Create(ctx context.Context, nt NewTask) (Task, error) {
-	active, err := s.userBus.IsUserActive(ctx, nt.CreatedBy)
+	creator, err := s.userBus.QueryById(ctx, nt.CreatedBy)
 	if err != nil {
-		return Task{}, err
+		return Task{}, fmt.Errorf("failed to retrieve creator user with ID %d: %v", nt.CreatedBy, err)
 	}
-	if !active {
-		return Task{}, fmt.Errorf("user with ID %d is not active", nt.CreatedBy)
+	if !creator.Active {
+		return Task{}, fmt.Errorf("creator user with ID %d is not active", nt.CreatedBy)
 	}
 
 	if nt.AssignedTo.Valid {
-		assignedActive, err := s.userBus.IsUserActive(ctx, int(nt.AssignedTo.Int32))
+		user, err := s.userBus.QueryById(ctx, int(nt.AssignedTo.Int32))
 		if err != nil {
-			return Task{}, err
+			return Task{}, fmt.Errorf("failed to retrieve assigned user with ID %d: %v", nt.AssignedTo.Int32, err)
 		}
-		if !assignedActive {
+		if !user.Active {
 			return Task{}, fmt.Errorf("assigned user with ID %d is not active", nt.AssignedTo.Int32)
 		}
 	}

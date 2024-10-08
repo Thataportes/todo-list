@@ -5,7 +5,9 @@ import (
 	"TODO-list/business/domain/userbus"
 	"TODO-list/foundation/web"
 	"context"
+	"fmt"
 	"net/http"
+	"net/mail"
 	"strconv"
 )
 
@@ -65,6 +67,10 @@ func (a *App) QueryById(ctx context.Context, r *http.Request) web.Encoder {
 func (a *App) QueryByEmail(ctx context.Context, r *http.Request) web.Encoder {
 	email := web.Param(r, "email")
 
+	_, err := mail.ParseAddress(email)
+	if err != nil {
+		return errs.New(errs.InvalidArgument, fmt.Errorf("invalid email format: %v", err))
+	}
 	userBus, err := a.userBus.QueryByEmail(ctx, email)
 	if err != nil {
 		return errs.New(errs.InternalOnlyLog, err)

@@ -115,14 +115,3 @@ func (s *Business) Deactivate(ctx context.Context, id int) error {
 	_, err := s.db.ExecContext(ctx, query, UpdatedAt, id)
 	return err
 }
-
-// IsUserActive checks if a user is active in the system based on their user ID.
-func (s *Business) IsUserActive(ctx context.Context, userID int) (bool, error) {
-	var active bool
-	query := "SELECT active FROM users WHERE id = ?"
-	err := s.db.QueryRowContext(ctx, query, userID).Scan(&active)
-	if err != nil {
-		return false, err
-	}
-	return active, nil
-}
