@@ -99,8 +99,8 @@ func (s *Business) QueryByEmail(ctx context.Context, email string) (User, error)
 // Update modifies an existing user's information in the database.
 func (s *Business) Update(ctx context.Context, id int, uu UpdateUser) error {
 	UpdatedAt := sql.NullTime{Time: time.Now(), Valid: true}
-	query := "UPDATE users SET name = ?, email = ?, active = ?, updated_at = ? WHERE id = ?"
-	_, err := s.db.ExecContext(ctx, query, uu.Name, uu.Email, uu.Active, UpdatedAt, id)
+	query := "UPDATE users SET name = ?, email = ?, updated_at = ? WHERE id = ?"
+	_, err := s.db.ExecContext(ctx, query, uu.Name, uu.Email, UpdatedAt, id)
 	if err != nil {
 		return err
 	}

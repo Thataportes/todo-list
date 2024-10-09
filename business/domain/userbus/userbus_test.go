@@ -131,12 +131,12 @@ func TestUpdate(t *testing.T) {
 	setupMockDB(t)
 	defer db.Close()
 
-	mock.ExpectExec("^UPDATE users SET name = \\?, email = \\?, active = \\?, updated_at = \\? WHERE id = \\?$").
-		WithArgs("Updated Name", "updated@example.com", true, sqlmock.AnyArg(), 1).
+	mock.ExpectExec("^UPDATE users SET name = \\?, email = \\?, updated_at = \\? WHERE id = \\?$").
+		WithArgs("Updated Name", "updated@example.com", sqlmock.AnyArg(), 1).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	ctx := context.Background()
-	updateUser := userbus.UpdateUser{Name: "Updated Name", Email: "updated@example.com", Active: true}
+	updateUser := userbus.UpdateUser{Name: "Updated Name", Email: "updated@example.com"}
 	err := business.Update(ctx, 1, updateUser)
 
 	assert.NoError(t, err)

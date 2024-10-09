@@ -22,7 +22,6 @@ type NewUser struct {
 
 // UpdateUser represents the input data required to update an existing user.
 type UpdateUser struct {
-	Name   string
-	Email  string
-	Active bool
+	Name  string
+	Email string
 }

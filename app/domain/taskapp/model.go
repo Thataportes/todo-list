@@ -7,42 +7,6 @@ import (
 	"time"
 )
 
-// AssignedTo is a custom type for serializing the 'assigned_to' field.
-type AssignedTo struct {
-	ID    int  `json:"id"`
-	Valid bool `json:"-"`
-}
-
-// MarshalJSON customizes the JSON encoding of the 'AssignedTo' field.
-func (a AssignedTo) MarshalJSON() ([]byte, error) {
-	if !a.Valid {
-		return []byte("null"), nil
-	}
-	return json.Marshal(struct {
-		ID int `json:"id"`
-	}{
-		ID: a.ID,
-	})
-}
-
-// CreatedBy is a custom type for the 'created_by' field.
-type CreatedBy struct {
-	ID    int  `json:"id"`
-	Valid bool `json:"-"`
-}
-
-// MarshalJSON customizes the JSON encoding of the 'CreatedBy' field.
-func (c CreatedBy) MarshalJSON() ([]byte, error) {
-	if !c.Valid {
-		return []byte("null"), nil
-	}
-	return json.Marshal(struct {
-		ID int `json:"id"`
-	}{
-		ID: c.ID,
-	})
-}
-
 // NewTask represents a new task to be created.
 type NewTask struct {
 	Title       string `json:"title"`
