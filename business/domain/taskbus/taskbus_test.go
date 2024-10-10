@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"TODO-list/business/domain/taskbus"
+	"TODO-list/business/domain/userbus"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
@@ -22,14 +23,15 @@ func setupMockDB(t *testing.T) {
 	var err error
 	db, mock, err = sqlmock.New()
 	assert.NoError(t, err)
-	business = taskbus.NewBusiness(db)
+
+	userBus := userbus.NewBusiness(db)
+	business = taskbus.NewBusiness(db, userBus)
 }
 
 func mockTaskRows() *sqlmock.Rows {
-	return sqlmock.NewRows([]string{"id", "title", "description", "created_at", "finished_at"}).
-		AddRow(1, "Task 1", "Description 1", time.Now(), sql.NullTime{}).
-		AddRow(2, "Task 2", "Description 2", time.Now(), sql.NullTime{})
-
+	return sqlmock.NewRows([]string{"id", "title", "description", "created_at", "finished_at", "created_by", "assigned_to"}).
+		AddRow(1, "Task 1", "Description 1", time.Now(), sql.NullTime{}, 1, sql.NullInt32{}).
+		AddRow(2, "Task 2", "Description 2", time.Now(), sql.NullTime{}, 1, sql.NullInt32{})
 }
 
 func assertMockExpectations(t *testing.T, mock sqlmock.Sqlmock) {
@@ -40,12 +42,27 @@ func TestCreate(t *testing.T) {
 	setupMockDB(t)
 	defer db.Close()
 
+	mock.ExpectQuery("SELECT id, name, email, active, created_at, updated_at FROM users WHERE id = ?").
+		WithArgs(int64(1)).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "active", "created_at", "updated_at"}).
+			AddRow(1, "Creator Name", "creator@example.com", true, time.Now(), time.Now()))
+
+	mock.ExpectQuery("SELECT id, name, email, active, created_at, updated_at FROM users WHERE id = ?").
+		WithArgs(int64(2)).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "active", "created_at", "updated_at"}).
+			AddRow(2, "Assigned Name", "assigned@example.com", true, time.Now(), time.Now()))
+
 	mock.ExpectExec("INSERT INTO task").
-		WithArgs("New Task", "This is a new task", sqlmock.AnyArg(), sqlmock.AnyArg()).
+		WithArgs("New Task", "This is a new task", 1, sql.NullInt32{Int32: 2, Valid: true}, sqlmock.AnyArg(), sqlmock.AnyArg()).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	ctx := context.Background()
-	newTask := taskbus.NewTask{Title: "New Task", Description: "This is a new task"}
+	newTask := taskbus.NewTask{
+		Title:       "New Task",
+		Description: "This is a new task",
+		CreatedBy:   1,
+		AssignedTo:  sql.NullInt32{Int32: 2, Valid: true},
+	}
 	task, err := business.Create(ctx, newTask)
 
 	assert.NoError(t, err)
@@ -54,7 +71,8 @@ func TestCreate(t *testing.T) {
 	assert.Equal(t, "This is a new task", task.Description)
 	assert.NotEmpty(t, task.CreatedAt)
 	assert.True(t, task.CreatedAt.After(time.Now().Add(-time.Hour)))
-	assert.True(t, task.FinishedAt.IsZero())
+	assert.False(t, task.FinishedAt.Valid)
+
 	assertMockExpectations(t, mock)
 }
 
@@ -62,7 +80,7 @@ func TestQuery(t *testing.T) {
 	setupMockDB(t)
 	defer db.Close()
 
-	mock.ExpectQuery("SELECT id, title, description, created_at, finished_at FROM task").
+	mock.ExpectQuery("SELECT id, title, description, created_at, finished_at, created_by, assigned_to FROM task").
 		WillReturnRows(mockTaskRows())
 
 	ctx := context.Background()
@@ -72,9 +90,9 @@ func TestQuery(t *testing.T) {
 	assert.Len(t, tasks, 2)
 	assert.Equal(t, "Task 1", tasks[0].Title)
 	assert.Equal(t, "Description 1", tasks[0].Description)
-	assert.NotEmpty(t, tasks[0].Title)
+	assert.NotEmpty(t, tasks[0].CreatedAt)
 	assert.True(t, tasks[0].CreatedAt.After(time.Now().Add(-time.Hour)))
-	assert.True(t, tasks[0].FinishedAt.IsZero())
+	assert.False(t, tasks[0].FinishedAt.Valid)
 	assertMockExpectations(t, mock)
 }
 
@@ -82,12 +100,10 @@ func TestQueryByID(t *testing.T) {
 	setupMockDB(t)
 	defer db.Close()
 
-	row := sqlmock.NewRows([]string{"id", "title", "description", "created_at", "finished_at"}).
-		AddRow(1, "Task 1", "Description 1", time.Now(), sql.NullTime{})
-
-	mock.ExpectQuery("SELECT id, title, description, created_at, finished_at FROM task WHERE id = ?").
+	mock.ExpectQuery("SELECT id, title, description, created_at, finished_at, created_by, assigned_to FROM task WHERE id = ?").
 		WithArgs(1).
-		WillReturnRows(row)
+		WillReturnRows(sqlmock.NewRows([]string{"id", "title", "description", "created_at", "finished_at", "created_by", "assigned_to"}).
+			AddRow(1, "Task 1", "Description 1", time.Now(), sql.NullTime{}, 1, sql.NullInt32{}))
 
 	ctx := context.Background()
 	task, err := business.QueryByID(ctx, 1)
@@ -97,7 +113,7 @@ func TestQueryByID(t *testing.T) {
 	assert.Equal(t, "Description 1", task.Description)
 	assert.NotEmpty(t, task.CreatedAt)
 	assert.True(t, task.CreatedAt.After(time.Now().Add(-time.Hour)))
-	assert.True(t, task.FinishedAt.IsZero())
+	assert.False(t, task.FinishedAt.Valid)
 	assertMockExpectations(t, mock)
 }
 
@@ -105,13 +121,13 @@ func TestUpdate(t *testing.T) {
 	setupMockDB(t)
 	defer db.Close()
 
-	mock.ExpectExec("^UPDATE task SET title = \\?, description = \\? WHERE id = \\?$").
-		WithArgs("Update Title", "Update Description", 1).
+	mock.ExpectExec("^UPDATE task SET title = \\?, description = \\?, assigned_to = \\? WHERE id = \\?$").
+		WithArgs("Update Title", "Update Description", sql.NullInt32{}, 1).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	ctx := context.Background()
-	updateTask := taskbus.UpdateTask{ID: 1, Title: "Update Title", Description: "Update Description"}
-	err := business.Update(ctx, updateTask)
+	updateTask := taskbus.UpdateTask{Title: "Update Title", Description: "Update Description"}
+	err := business.Update(ctx, 1, updateTask)
 
 	assert.NoError(t, err)
 	assertMockExpectations(t, mock)

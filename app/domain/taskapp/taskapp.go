@@ -5,6 +5,7 @@ import (
 	"TODO-list/business/domain/taskbus"
 	"TODO-list/foundation/web"
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -14,6 +15,7 @@ type App struct {
 	taskBus *taskbus.Business
 }
 
+// newApp creates a new instance of App with the task business logic layer.
 func newApp(taskBus *taskbus.Business) *App {
 	return &App{
 		taskBus: taskBus,
@@ -25,6 +27,10 @@ func (a *App) Create(ctx context.Context, r *http.Request) web.Encoder {
 	var app NewTask
 	if err := web.Decode(r, &app); err != nil {
 		return errs.New(errs.InvalidArgument, err)
+	}
+
+	if app.CreatedBy == 0 {
+		return errs.New(errs.InvalidArgument, fmt.Errorf("created_by is required"))
 	}
 
 	taskBus, err := a.taskBus.Create(ctx, toBusNewTask(app))

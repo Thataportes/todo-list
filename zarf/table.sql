@@ -3,5 +3,17 @@ CREATE TABLE task (
     title varchar(255),
     description text,
     created_at DATETIME null,
-    finished_at DATETIME null
+    finished_at DATETIME null,
+    created_by INT NOT NULL,
+    assigned_to INT NULL
 );
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    status BOOLEAN NOT NULL DEFAULT TRUE, 
+    created_at NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at NOT NULL DEFAULT CURRENT_TIMESTAMP,
+);
+

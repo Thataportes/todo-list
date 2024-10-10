@@ -1,6 +1,7 @@
 package taskbus
 
 import (
+	"TODO-list/business/domain/userbus"
 	"context"
 	"database/sql"
 	"fmt"
@@ -11,20 +12,43 @@ import (
 
 // Business handles business logic and persistence of tasks.
 type Business struct {
-	db *sql.DB
+	db      *sql.DB
+	userBus *userbus.Business
 }
 
 // NewBusiness creates a new instance of Business.
-func NewBusiness(db *sql.DB) *Business {
-	return &Business{db: db}
+func NewBusiness(db *sql.DB, userBus *userbus.Business) *Business {
+	return &Business{
+		db:      db,
+		userBus: userBus,
+	}
 }
 
 // Create adds a new task to the database and returns the created task.
 func (s *Business) Create(ctx context.Context, nt NewTask) (Task, error) {
+	creator, err := s.userBus.QueryById(ctx, nt.CreatedBy)
+	if err != nil {
+		return Task{}, fmt.Errorf("failed to retrieve creator user with ID %d: %v", nt.CreatedBy, err)
+	}
+	if !creator.Active {
+		return Task{}, fmt.Errorf("creator user with ID %d is not active", nt.CreatedBy)
+	}
+
+	if nt.AssignedTo.Valid {
+		user, err := s.userBus.QueryById(ctx, int(nt.AssignedTo.Int32))
+		if err != nil {
+			return Task{}, fmt.Errorf("failed to retrieve assigned user with ID %d: %v", nt.AssignedTo.Int32, err)
+		}
+		if !user.Active {
+			return Task{}, fmt.Errorf("assigned user with ID %d is not active", nt.AssignedTo.Int32)
+		}
+	}
+
 	createdAt := sql.NullTime{Time: time.Now(), Valid: true}
 	finishedAt := sql.NullTime{Valid: false}
-	query := "INSERT INTO task (title, description, created_at, finished_at) VALUES (?, ?, ?, ?)"
-	result, err := s.db.ExecContext(ctx, query, nt.Title, nt.Description, createdAt, finishedAt)
+
+	query := "INSERT INTO task (title, description, created_by, assigned_to, created_at, finished_at) VALUES (?, ?, ?, ?, ?, ?)"
+	result, err := s.db.ExecContext(ctx, query, nt.Title, nt.Description, nt.CreatedBy, nt.AssignedTo, createdAt, finishedAt)
 	if err != nil {
 		return Task{}, err
 	}
@@ -34,12 +58,20 @@ func (s *Business) Create(ctx context.Context, nt NewTask) (Task, error) {
 		return Task{}, err
 	}
 
-	return toBusinessTask(int(lastInsertID), nt.Title, nt.Description, createdAt, finishedAt), nil
+	return Task{
+		ID:          int(lastInsertID),
+		Title:       nt.Title,
+		Description: nt.Description,
+		CreatedAt:   createdAt.Time,
+		FinishedAt:  finishedAt,
+		CreatedBy:   nt.CreatedBy,
+		AssignedTo:  nt.AssignedTo,
+	}, nil
 }
 
 // Query retrieves all tasks from the database.
 func (s *Business) Query(ctx context.Context) ([]Task, error) {
-	query := "SELECT id, title, description, created_at, finished_at FROM task"
+	query := "SELECT id, title, description, created_at, finished_at, created_by, assigned_to FROM task"
 	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -48,16 +80,11 @@ func (s *Business) Query(ctx context.Context) ([]Task, error) {
 
 	var tasks []Task
 	for rows.Next() {
-		var id int
-		var title, description string
-		var createdAt, finishedAt sql.NullTime
-
-		err := rows.Scan(&id, &title, &description, &createdAt, &finishedAt)
+		var task Task
+		err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.CreatedAt, &task.FinishedAt, &task.CreatedBy, &task.AssignedTo)
 		if err != nil {
 			return nil, err
 		}
-
-		task := toBusinessTask(id, title, description, createdAt, finishedAt)
 		tasks = append(tasks, task)
 	}
 
@@ -70,22 +97,22 @@ func (s *Business) Query(ctx context.Context) ([]Task, error) {
 
 // QueryByID retrieves a task by its ID.
 func (s *Business) QueryByID(ctx context.Context, id int) (Task, error) {
-	query := "SELECT id, title, description, created_at, finished_at FROM task WHERE id = ?"
+	query := "SELECT id, title, description, created_at, finished_at, created_by, assigned_to FROM task WHERE id = ?"
 	row := s.db.QueryRowContext(ctx, query, id)
 
-	var busTask Task
-	err := row.Scan(&busTask.ID, &busTask.Title, &busTask.Description, &busTask.CreatedAt, &busTask.FinishedAt)
+	var task Task
+	err := row.Scan(&task.ID, &task.Title, &task.Description, &task.CreatedAt, &task.FinishedAt, &task.CreatedBy, &task.AssignedTo)
 	if err != nil {
 		return Task{}, err
 	}
 
-	return busTask, nil
+	return task, nil
 }
 
 // Update modifies task information in the database and returns the updated task.
 func (s *Business) Update(ctx context.Context, id int, ut UpdateTask) error {
-	query := "UPDATE task SET title = ?, description = ? WHERE id = ?"
-	_, err := s.db.ExecContext(ctx, query, ut.Title, ut.Description, id)
+	query := "UPDATE task SET title = ?, description = ?, assigned_to = ? WHERE id = ?"
+	_, err := s.db.ExecContext(ctx, query, ut.Title, ut.Description, ut.AssignedTo, id)
 	if err != nil {
 		return err
 	}

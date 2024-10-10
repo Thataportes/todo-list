@@ -2,6 +2,7 @@ package taskapp
 
 import (
 	"TODO-list/business/domain/taskbus"
+	"database/sql"
 	"encoding/json"
 	"time"
 )
@@ -10,6 +11,8 @@ import (
 type NewTask struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
+	CreatedBy   int    `json:"created_by"`
+	AssignedTo  *int   `json:"assigned_to"`
 }
 
 // Decode implements the decoder interface.
@@ -19,9 +22,15 @@ func (nt *NewTask) Decode(data []byte) error {
 
 // toBusNewTask converts a NewTask from the application layer to the business layer.
 func toBusNewTask(nt NewTask) taskbus.NewTask {
+	assignedTo := sql.NullInt32{Int32: 1}
+	if nt.AssignedTo != nil {
+		assignedTo = sql.NullInt32{Int32: int32(*nt.AssignedTo), Valid: true}
+	}
 	return taskbus.NewTask{
 		Title:       nt.Title,
 		Description: nt.Description,
+		CreatedBy:   nt.CreatedBy,
+		AssignedTo:  assignedTo,
 	}
 }
 
@@ -32,6 +41,8 @@ type Task struct {
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
 	FinishedAt  time.Time `json:"finished_at"`
+	CreatedBy   int       `json:"created_by"`
+	AssignedTo  int       `json:"assigned_to"`
 }
 
 // Encode implements the web.Encoder interface for the Task type.
@@ -48,6 +59,8 @@ func toAppTask(taskBus taskbus.Task) Task {
 		Description: taskBus.Description,
 		CreatedAt:   taskBus.CreatedAt,
 		FinishedAt:  taskBus.FinishedAt.Time,
+		CreatedBy:   taskBus.CreatedBy,
+		AssignedTo:  int(taskBus.AssignedTo.Int32),
 	}
 }
 
@@ -73,6 +86,7 @@ func toAppTasks(tasksBus []taskbus.Task) Tasks {
 type UpdateTask struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
+	AssignedTo  *int   `json:"assigned_to"`
 }
 
 // Decode implements the decoder interface.
@@ -82,8 +96,14 @@ func (ut *UpdateTask) Decode(data []byte) error {
 
 // toBusUpdateTask converts an UpdateTask from the application layer to the business layer.
 func toBusUpdateTask(ut UpdateTask) taskbus.UpdateTask {
+	assignedTo := sql.NullInt32{Valid: false}
+	if ut.AssignedTo != nil {
+		assignedTo = sql.NullInt32{Int32: int32(*ut.AssignedTo), Valid: true}
+	}
+
 	return taskbus.UpdateTask{
 		Title:       ut.Title,
 		Description: ut.Description,
+		AssignedTo:  assignedTo,
 	}
 }
