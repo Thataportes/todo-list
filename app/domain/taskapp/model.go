@@ -11,6 +11,7 @@ import (
 type NewTask struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
+	ProjectID   int    `json:"project_id"`
 	CreatedBy   int    `json:"created_by"`
 	AssignedTo  *int   `json:"assigned_to"`
 }
@@ -29,6 +30,7 @@ func toBusNewTask(nt NewTask) taskbus.NewTask {
 	return taskbus.NewTask{
 		Title:       nt.Title,
 		Description: nt.Description,
+		ProjectID:   nt.ProjectID,
 		CreatedBy:   nt.CreatedBy,
 		AssignedTo:  assignedTo,
 	}
@@ -39,6 +41,7 @@ type Task struct {
 	ID          int       `json:"id"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
+	ProjectID   int       `json:"project_id"`
 	CreatedAt   time.Time `json:"created_at"`
 	FinishedAt  time.Time `json:"finished_at"`
 	CreatedBy   int       `json:"created_by"`
@@ -57,6 +60,7 @@ func toAppTask(taskBus taskbus.Task) Task {
 		ID:          taskBus.ID,
 		Title:       taskBus.Title,
 		Description: taskBus.Description,
+		ProjectID:   taskBus.ProjectID,
 		CreatedAt:   taskBus.CreatedAt,
 		FinishedAt:  taskBus.FinishedAt.Time,
 		CreatedBy:   taskBus.CreatedBy,

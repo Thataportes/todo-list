@@ -1,8 +1,10 @@
 package mux
 
 import (
+	"TODO-list/app/domain/projectapp"
 	"TODO-list/app/domain/taskapp"
 	"TODO-list/app/domain/userapp"
+	"TODO-list/business/domain/projectbus"
 	"TODO-list/business/domain/taskbus"
 	"TODO-list/business/domain/userbus"
 	"TODO-list/foundation/logger"
@@ -26,7 +28,8 @@ func WebAPI(cfg Config) (http.Handler, error) {
 	app := web.NewApp(logger)
 
 	userBus := userbus.NewBusiness(cfg.DB)
-	taskBus := taskbus.NewBusiness(cfg.DB, userBus)
+	projectBus := projectbus.NewBusiness(cfg.DB, userBus)
+	taskBus := taskbus.NewBusiness(cfg.DB, userBus, projectBus)
 
 	userapp.Routes(app, userapp.Config{
 		UserBus: userBus,
@@ -37,5 +40,11 @@ func WebAPI(cfg Config) (http.Handler, error) {
 		TaskBus: taskBus,
 		Logger:  cfg.Log,
 	})
+
+	projectapp.Routes(app, projectapp.Config{
+		ProjectBus: projectBus,
+		Logger:     cfg.Log,
+	})
+
 	return app, nil
 }
