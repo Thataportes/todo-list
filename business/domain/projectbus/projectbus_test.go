@@ -45,8 +45,8 @@ func TestCreate(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "active", "created_at", "updated_at"}).
 			AddRow(1, "Creator Name", "creator@example.com", true, time.Now(), time.Now()))
 
-	mock.ExpectExec("INSERT INTO projects").
-		WithArgs("New Project", true, sqlmock.AnyArg(), int64(1)).
+	mock.ExpectExec("INSERT INTO project \\(name, active, created_at, created_by\\) VALUES \\(\\?, \\?, \\?, \\?\\)").
+		WithArgs("New Project", true, sqlmock.AnyArg(), 1).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	ctx := context.Background()
@@ -108,20 +108,25 @@ func TestQueryById(t *testing.T) {
 	assertMockExpectations(t, mock)
 }
 
-func TestDelete(t *testing.T) {
+func TestUpdate(t *testing.T) {
 	setupMockDB(t)
 	defer db.Close()
 
-	mock.ExpectExec("DELETE FROM project WHERE id = ?").
-		WithArgs(1).
+	mock.ExpectExec("^UPDATE project SET name = \\? WHERE id = \\?$").
+		WithArgs("Updated Project", 1).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	ctx := context.Background()
-	err := business.Delete(ctx, 1)
+
+	update := projectbus.UpdateProject{
+		Name: "Updated Project",
+	}
+	err := business.Update(ctx, 1, update)
 
 	assert.NoError(t, err)
 	assertMockExpectations(t, mock)
 }
+
 func TestDeactivate(t *testing.T) {
 	setupMockDB(t)
 	defer db.Close()
@@ -132,6 +137,21 @@ func TestDeactivate(t *testing.T) {
 
 	ctx := context.Background()
 	err := business.Deactivate(ctx, 1)
+
+	assert.NoError(t, err)
+	assertMockExpectations(t, mock)
+}
+
+func TestDelete(t *testing.T) {
+	setupMockDB(t)
+	defer db.Close()
+
+	mock.ExpectExec("^DELETE FROM project WHERE id = \\?$").
+		WithArgs(1).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	ctx := context.Background()
+	err := business.Delete(ctx, 1)
 
 	assert.NoError(t, err)
 	assertMockExpectations(t, mock)

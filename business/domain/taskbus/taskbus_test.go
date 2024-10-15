@@ -59,8 +59,8 @@ func TestCreate(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "active", "created_at", "updated_at"}).
 			AddRow(2, "Assigned Name", "assigned@example.com", true, time.Now(), time.Now()))
 
-	mock.ExpectExec("INSERT INTO task").
-		WithArgs("New Task", "This is a new task", 3, 1, sql.NullInt32{Int32: 2, Valid: true}, sqlmock.AnyArg(), sqlmock.AnyArg()).
+	mock.ExpectExec("INSERT INTO task \\(title, description, created_by, assigned_to, project_id, created_at, finished_at\\) VALUES \\(\\?, \\?, \\?, \\?, \\?, \\?, \\?\\)").
+		WithArgs("New Task", "This is a new task", 1, sql.NullInt32{Int32: 2, Valid: true}, 3, sqlmock.AnyArg(), sqlmock.AnyArg()).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	ctx := context.Background()

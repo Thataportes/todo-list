@@ -83,8 +83,23 @@ func (a *App) Update(ctx context.Context, r *http.Request) web.Encoder {
 	return nil
 }
 
-// Delete deactivates a project by its ID.
+// Delete removes a project permanently from the database.
 func (a *App) Delete(ctx context.Context, r *http.Request) web.Encoder {
+	id, err := strconv.Atoi(web.Param(r, "id"))
+	if err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
+	err = a.projectBus.Delete(ctx, id)
+	if err != nil {
+		return errs.New(errs.InternalOnlyLog, err)
+	}
+
+	return nil
+}
+
+// Deactivate sets the project's status to inactive without deleting it.
+func (a *App) Deactivate(ctx context.Context, r *http.Request) web.Encoder {
 	id, err := strconv.Atoi(web.Param(r, "id"))
 	if err != nil {
 		return errs.New(errs.InvalidArgument, err)

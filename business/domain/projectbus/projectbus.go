@@ -32,7 +32,7 @@ func (s *Business) Create(ctx context.Context, np NewProject) (Project, error) {
 		return Project{}, fmt.Errorf("creator user with ID %d is not active", np.CreatedBy)
 	}
 
-	createdAt := sql.NullTime{Time: time.Now(), Valid: true}
+	createdAt := time.Now()
 	query := "INSERT INTO project (name, active, created_at, created_by) VALUES (?, ?, ?, ?) "
 	result, err := s.db.ExecContext(ctx, query, np.Name, true, createdAt, np.CreatedBy)
 	if err != nil {
@@ -48,7 +48,7 @@ func (s *Business) Create(ctx context.Context, np NewProject) (Project, error) {
 		ID:        int(lastInsertID),
 		Name:      np.Name,
 		Active:    true,
-		CreatedAt: createdAt.Time,
+		CreatedAt: createdAt,
 		CreatedBy: np.CreatedBy,
 	}, nil
 }
@@ -108,12 +108,18 @@ func (s *Business) Update(ctx context.Context, id int, up UpdateProject) error {
 func (s *Business) Delete(ctx context.Context, id int) error {
 	query := "DELETE FROM project WHERE id = ?"
 	_, err := s.db.ExecContext(ctx, query, id)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to delete project with ID %d: %v", id, err)
+	}
+	return nil
 }
 
 // Deactivate sets a project's status to inactive (false) in the database.
 func (s *Business) Deactivate(ctx context.Context, id int) error {
 	query := "UPDATE project SET active = false WHERE id = ?"
 	_, err := s.db.ExecContext(ctx, query, id)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to deactivate project with ID %d: %v", id, err)
+	}
+	return nil
 }
