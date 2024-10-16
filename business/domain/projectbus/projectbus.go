@@ -115,8 +115,8 @@ func (s *Business) Delete(ctx context.Context, id int) error {
 	if hasTasks {
 		return s.Deactivate(ctx, id)
 	}
-	Query := "DELETE FROM project WHERE id = ?"
-	_, err = s.db.ExecContext(ctx, Query, id)
+	deleteQuery := "DELETE FROM project WHERE id = ?"
+	_, err = s.db.ExecContext(ctx, deleteQuery, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete project with ID %d: %w", id, err)
 	}
