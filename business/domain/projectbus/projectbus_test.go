@@ -146,12 +146,28 @@ func TestDelete(t *testing.T) {
 	setupMockDB(t)
 	defer db.Close()
 
+	mock.ExpectQuery("^SELECT EXISTS\\(SELECT 1 FROM task WHERE project_id = \\?\\)$").
+		WithArgs(1).
+		WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(false))
+
 	mock.ExpectExec("^DELETE FROM project WHERE id = \\?$").
 		WithArgs(1).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	ctx := context.Background()
 	err := business.Delete(ctx, 1)
+
+	assert.NoError(t, err)
+	assertMockExpectations(t, mock)
+
+	mock.ExpectQuery("^SELECT EXISTS\\(SELECT 1 FROM task WHERE project_id = \\?\\)$").
+		WithArgs(2).
+		WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
+	mock.ExpectExec("^UPDATE project SET active = false WHERE id = \\?$").
+		WithArgs(2).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	err = business.Delete(ctx, 2)
 
 	assert.NoError(t, err)
 	assertMockExpectations(t, mock)

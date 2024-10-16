@@ -106,11 +106,21 @@ func (s *Business) Update(ctx context.Context, id int, up UpdateProject) error {
 
 // Delete removes a project from the database by its ID.
 func (s *Business) Delete(ctx context.Context, id int) error {
-	query := "DELETE FROM project WHERE id = ?"
-	_, err := s.db.ExecContext(ctx, query, id)
+	checkQuery := "SELECT EXISTS(SELECT 1 FROM task WHERE project_id = ?)"
+	var hasTasks bool
+	err := s.db.QueryRowContext(ctx, checkQuery, id).Scan(&hasTasks)
 	if err != nil {
-		return fmt.Errorf("failed to delete project with ID %d: %v", id, err)
+		return fmt.Errorf("failed to check if project has associated tasks with ID %d: %w", id, err)
 	}
+	if hasTasks {
+		return s.Deactivate(ctx, id)
+	}
+	Query := "DELETE FROM project WHERE id = ?"
+	_, err = s.db.ExecContext(ctx, Query, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete project with ID %d: %w", id, err)
+	}
+
 	return nil
 }
 
