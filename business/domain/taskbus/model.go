@@ -10,6 +10,7 @@ type Task struct {
 	ID          int           `json:"id"`
 	Title       string        `json:"title"`
 	Description string        `json:"description"`
+	ProjectID   int           `json:"project_id"`
 	CreatedAt   time.Time     `json:"created_at"`
 	FinishedAt  sql.NullTime  `json:"finished_at"`
 	CreatedBy   int           `json:"created_by"`
@@ -20,6 +21,7 @@ type Task struct {
 type NewTask struct {
 	Title       string
 	Description string
+	ProjectID   int
 	CreatedBy   int
 	AssignedTo  sql.NullInt32
 }

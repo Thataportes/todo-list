@@ -1,6 +1,7 @@
 package taskbus
 
 import (
+	"TODO-list/business/domain/projectbus"
 	"TODO-list/business/domain/userbus"
 	"context"
 	"database/sql"
@@ -12,20 +13,30 @@ import (
 
 // Business handles business logic and persistence of tasks.
 type Business struct {
-	db      *sql.DB
-	userBus *userbus.Business
+	db         *sql.DB
+	userBus    *userbus.Business
+	projectBus *projectbus.Business
 }
 
-// NewBusiness creates a new instance of Business.
-func NewBusiness(db *sql.DB, userBus *userbus.Business) *Business {
+// NewBusiness initializes a new instance of Business with the given database and user business logic.
+func NewBusiness(db *sql.DB, userBus *userbus.Business, projectBus *projectbus.Business) *Business {
 	return &Business{
-		db:      db,
-		userBus: userBus,
+		db:         db,
+		userBus:    userBus,
+		projectBus: projectBus,
 	}
 }
 
-// Create adds a new task to the database and returns the created task.
+// Create adds a new task to the database after validating the creator and assigned users,
 func (s *Business) Create(ctx context.Context, nt NewTask) (Task, error) {
+	project, err := s.projectBus.QueryById(ctx, nt.ProjectID)
+	if err != nil {
+		return Task{}, fmt.Errorf("project with ID %d does not exist: %w", nt.ProjectID, err)
+	}
+	if !project.Active {
+		return Task{}, fmt.Errorf("project with ID %d is not active", nt.ProjectID)
+	}
+
 	creator, err := s.userBus.QueryById(ctx, nt.CreatedBy)
 	if err != nil {
 		return Task{}, fmt.Errorf("failed to retrieve creator user with ID %d: %v", nt.CreatedBy, err)
@@ -47,8 +58,8 @@ func (s *Business) Create(ctx context.Context, nt NewTask) (Task, error) {
 	createdAt := sql.NullTime{Time: time.Now(), Valid: true}
 	finishedAt := sql.NullTime{Valid: false}
 
-	query := "INSERT INTO task (title, description, created_by, assigned_to, created_at, finished_at) VALUES (?, ?, ?, ?, ?, ?)"
-	result, err := s.db.ExecContext(ctx, query, nt.Title, nt.Description, nt.CreatedBy, nt.AssignedTo, createdAt, finishedAt)
+	query := "INSERT INTO task (title, description, created_by, assigned_to, project_id, created_at, finished_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+	result, err := s.db.ExecContext(ctx, query, nt.Title, nt.Description, nt.CreatedBy, nt.AssignedTo, nt.ProjectID, createdAt, finishedAt)
 	if err != nil {
 		return Task{}, err
 	}
@@ -62,6 +73,7 @@ func (s *Business) Create(ctx context.Context, nt NewTask) (Task, error) {
 		ID:          int(lastInsertID),
 		Title:       nt.Title,
 		Description: nt.Description,
+		ProjectID:   nt.ProjectID,
 		CreatedAt:   createdAt.Time,
 		FinishedAt:  finishedAt,
 		CreatedBy:   nt.CreatedBy,
@@ -71,7 +83,8 @@ func (s *Business) Create(ctx context.Context, nt NewTask) (Task, error) {
 
 // Query retrieves all tasks from the database.
 func (s *Business) Query(ctx context.Context) ([]Task, error) {
-	query := "SELECT id, title, description, created_at, finished_at, created_by, assigned_to FROM task"
+	query := "SELECT id, title, description, created_at, finished_at, created_by, assigned_to, project_id FROM task"
+
 	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -81,7 +94,7 @@ func (s *Business) Query(ctx context.Context) ([]Task, error) {
 	var tasks []Task
 	for rows.Next() {
 		var task Task
-		err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.CreatedAt, &task.FinishedAt, &task.CreatedBy, &task.AssignedTo)
+		err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.CreatedAt, &task.FinishedAt, &task.CreatedBy, &task.AssignedTo, &task.ProjectID)
 		if err != nil {
 			return nil, err
 		}
@@ -97,11 +110,11 @@ func (s *Business) Query(ctx context.Context) ([]Task, error) {
 
 // QueryByID retrieves a task by its ID.
 func (s *Business) QueryByID(ctx context.Context, id int) (Task, error) {
-	query := "SELECT id, title, description, created_at, finished_at, created_by, assigned_to FROM task WHERE id = ?"
+	query := "SELECT id, title, description, project_id, created_at, finished_at, created_by, assigned_to FROM task WHERE id = ?"
 	row := s.db.QueryRowContext(ctx, query, id)
 
 	var task Task
-	err := row.Scan(&task.ID, &task.Title, &task.Description, &task.CreatedAt, &task.FinishedAt, &task.CreatedBy, &task.AssignedTo)
+	err := row.Scan(&task.ID, &task.Title, &task.Description, &task.ProjectID, &task.CreatedAt, &task.FinishedAt, &task.CreatedBy, &task.AssignedTo)
 	if err != nil {
 		return Task{}, err
 	}
